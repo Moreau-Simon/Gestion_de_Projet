@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="fr" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlowSaaS — Gestion de Projet Multi-Tenant</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="/static/style.css">
+    <!-- FontAwesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body class="h-full text-slate-800 flex flex-col antialiased">
+
+    <!-- TOAST CONTAINER -->
+    <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- ========================================== -->
+    <!-- AUTHENTICATION SCREEN (LOGIN / REGISTER)  -->
+    <!-- ========================================== -->
+    <div id="auth-screen" class="min-h-full flex flex-col justify-center py-12 sm:px-6 lg:px-8 bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white">
+        <div class="sm:mx-auto sm:w-full sm:max-w-md text-center">
+            <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-indigo-600 text-white shadow-xl shadow-indigo-500/30 mb-4">
+                <i class="fa-solid fa-layer-group text-2xl"></i>
+            </div>
+            <h1 class="text-3xl font-extrabold tracking-tight">FlowSaaS</h1>
+            <p class="mt-2 text-sm text-slate-300">Plateforme SaaS de gestion de projet collaborative (Kanban)</p>
+            <div class="mt-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">
+                <i class="fa-solid fa-shield-halved mr-1.5"></i> Isolation multi-tenant stricte (MongoDB)
+            </div>
+        </div>
+
+        <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-lg px-4 sm:px-0">
+            <div class="bg-white/10 backdrop-blur-md py-8 px-6 shadow-2xl rounded-2xl sm:px-10 border border-white/10 text-slate-100">
+                
+                <!-- Auth Tabs -->
+                <div class="flex border-b border-white/10 pb-4 mb-6 gap-4">
+                    <button id="tab-login" onclick="showAuthTab('login')" class="flex-1 py-2 text-center font-semibold text-sm border-b-2 border-indigo-400 text-white transition">
+                        <i class="fa-solid fa-arrow-right-to-bracket mr-2"></i>Connexion
+                    </button>
+                    <button id="tab-register" onclick="showAuthTab('register')" class="flex-1 py-2 text-center font-medium text-sm text-slate-400 border-b-2 border-transparent hover:text-white transition">
+                        <i class="fa-solid fa-building mr-2"></i>Nouvelle Entreprise
+                    </button>
+                </div>
+
+                <!-- FORM 1: LOGIN -->
+                <form id="form-login" onsubmit="handleLogin(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300">Email professionnel</label>
+                        <input type="email" id="login-email" required placeholder="alice@acme.com"
+                               class="mt-1 block w-full px-4 py-2.5 bg-slate-900/60 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300">Mot de passe</label>
+                        <input type="password" id="login-password" required placeholder="••••••••"
+                               class="mt-1 block w-full px-4 py-2.5 bg-slate-900/60 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm">
+                    </div>
+                    <button type="submit" class="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-xl shadow-lg shadow-indigo-600/30 transition text-sm">
+                        Accéder à l'espace de travail
+                    </button>
+
+                    <!-- Quick filling helpers for demo -->
+                    <div class="pt-4 border-t border-white/10 text-xs text-slate-400">
+                        <p class="font-semibold text-slate-300 mb-2">Comptes de test (créés par le script de test) :</p>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button type="button" onclick="fillLoginForm('alice@acme.com', 'Password123!')" class="p-2 rounded bg-slate-800/80 hover:bg-slate-800 border border-slate-700 text-left">
+                                <span class="font-medium text-indigo-300">🏢 Alice (Admin)</span><br>
+                                <span class="text-[11px] text-slate-400">Acme Corp</span>
+                            </button>
+                            <button type="button" onclick="fillLoginForm('charlie@beta.com', 'Password123!')" class="p-2 rounded bg-slate-800/80 hover:bg-slate-800 border border-slate-700 text-left">
+                                <span class="font-medium text-purple-300">🏢 Charlie (Admin)</span><br>
+                                <span class="text-[11px] text-slate-400">Beta Inc</span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- FORM 2: REGISTER COMPANY -->
+                <form id="form-register" onsubmit="handleRegisterCompany(event)" class="space-y-4 hidden">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300">Nom de votre entreprise</label>
+                        <input type="text" id="reg-company-name" required placeholder="ex: Wayne Enterprises"
+                               class="mt-1 block w-full px-4 py-2 bg-slate-900/60 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300">Description (optionnelle)</label>
+                        <input type="text" id="reg-company-desc" placeholder="ex: Cabinet de conseil en transformation digitale"
+                               class="mt-1 block w-full px-4 py-2 bg-slate-900/60 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300">Nom complet Admin</label>
+                            <input type="text" id="reg-admin-name" required placeholder="Bruce Wayne"
+                                   class="mt-1 block w-full px-4 py-2 bg-slate-900/60 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300">Email Administrateur</label>
+                            <input type="email" id="reg-admin-email" required placeholder="bruce@wayne.com"
+                                   class="mt-1 block w-full px-4 py-2 bg-slate-900/60 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300">Mot de passe (min. 6 caractères)</label>
+                        <input type="password" id="reg-admin-password" required minlength="6" placeholder="••••••••"
+                               class="mt-1 block w-full px-4 py-2 bg-slate-900/60 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                    </div>
+                    <button type="submit" class="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-xl shadow-lg shadow-indigo-600/30 transition text-sm">
+                        Créer l'organisation et se connecter
+                    </button>
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- APPLICATION MAIN SCREEN (AFTER LOGIN)      -->
+    <!-- ========================================== -->
+    <div id="app-screen" class="flex-1 flex flex-col h-full overflow-hidden hidden">
+
+        <!-- TOP BAR -->
+        <header class="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between shadow-sm z-10">
+            <div class="flex items-center space-x-4">
+                <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold shadow-md shadow-indigo-500/20">
+                    <i class="fa-solid fa-layer-group"></i>
+                </div>
+                <div>
+                    <div class="flex items-center space-x-2">
+                        <span id="current-company-name" class="font-bold text-slate-900 text-base">Entreprise</span>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-100 text-emerald-800">
+                            <i class="fa-solid fa-check-circle mr-1 text-[9px]"></i> Tenant isolé
+                        </span>
+                    </div>
+                    <div class="text-xs text-slate-500" id="current-company-sub">ID: ...</div>
+                </div>
+            </div>
+
+            <!-- User Menu -->
+            <div class="flex items-center space-x-4">
+                <a href="/docs" target="_blank" class="text-xs text-slate-500 hover:text-indigo-600 flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-slate-100 transition">
+                    <i class="fa-solid fa-book-open"></i> Swagger API
+                </a>
+                <div class="h-5 w-px bg-slate-200"></div>
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-semibold text-xs border border-indigo-200" id="user-avatar">
+                        U
+                    </div>
+                    <div class="text-left hidden sm:block">
+                        <div id="user-name" class="text-sm font-semibold text-slate-800 leading-tight">Utilisateur</div>
+                        <div class="flex items-center gap-1">
+                            <span id="user-role-badge" class="text-[10px] uppercase font-bold px-1.5 py-0.2 rounded bg-indigo-100 text-indigo-700">ADMIN</span>
+                            <span id="user-email" class="text-xs text-slate-400">user@example.com</span>
+                        </div>
+                    </div>
+                </div>
+                <button onclick="handleLogout()" title="Se déconnecter" class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- MAIN LAYOUT: SIDEBAR + CONTENT -->
+        <div class="flex-1 flex overflow-hidden">
+            
+            <!-- SIDEBAR -->
+            <aside class="w-64 bg-slate-900 text-slate-300 flex flex-col justify-between p-4 flex-shrink-0">
+                <nav class="space-y-1.5">
+                    <div class="px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">Navigation</div>
+                    
+                    <button onclick="navigateView('projects')" id="nav-projects" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition bg-indigo-600 text-white">
+                        <i class="fa-solid fa-folder-kanban w-4 text-center"></i>
+                        <span>Projets</span>
+                    </button>
+
+                    <button onclick="navigateView('team')" id="nav-team" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition text-slate-400 hover:text-white hover:bg-slate-800">
+                        <i class="fa-solid fa-users w-4 text-center"></i>
+                        <span>Équipe & Membres</span>
+                    </button>
+
+                    <button onclick="navigateView('settings')" id="nav-settings" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition text-slate-400 hover:text-white hover:bg-slate-800">
+                        <i class="fa-solid fa-sliders w-4 text-center"></i>
+                        <span>Entreprise</span>
+                    </button>
+                </nav>
+
+                <!-- Database status widget in sidebar -->
+                <div class="p-3 bg-slate-800/80 rounded-xl border border-slate-700/60 text-xs">
+                    <div class="flex items-center justify-between text-slate-400 mb-1">
+                        <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> MongoDB 7.0</span>
+                        <span class="text-[10px] text-slate-500">Async Motor</span>
+                    </div>
+                    <div class="text-[11px] text-slate-400 truncate">DB : <span class="text-slate-200 font-mono" id="sidebar-db-name">saas_pm_db</span></div>
+                </div>
+            </aside>
+
+            <!-- MAIN CONTENT AREA -->
+            <main class="flex-1 bg-slate-100 overflow-y-auto p-6 flex flex-col">
+                
+                <!-- VIEW 1: PROJECTS LIST -->
+                <div id="view-projects" class="space-y-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Projets de l'entreprise</h2>
+                            <p class="text-sm text-slate-500">Espaces de travail collaboratifs étanches à votre organisation.</p>
+                        </div>
+                        <button onclick="openCreateProjectModal()" class="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl shadow-sm transition text-sm">
+                            <i class="fa-solid fa-plus"></i> Nouveau projet
+                        </button>
+                    </div>
+
+                    <!-- Projects Grid -->
+                    <div id="projects-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </div>
+
+                <!-- VIEW 2: KANBAN BOARD -->
+                <div id="view-kanban" class="flex-1 flex flex-col space-y-4 hidden">
+                    <!-- Project Kanban Header -->
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-slate-200">
+                        <div class="flex items-center space-x-3">
+                            <button onclick="navigateView('projects')" class="p-2 rounded-lg bg-white border border-slate-200 text-slate-600 hover:text-indigo-600 hover:bg-slate-50 transition text-sm">
+                                <i class="fa-solid fa-arrow-left"></i>
+                            </button>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <h2 id="kanban-project-title" class="text-xl font-bold text-slate-900">Projet</h2>
+                                    <span class="px-2 py-0.5 rounded text-xs bg-indigo-100 text-indigo-700 font-medium">Kanban</span>
+                                </div>
+                                <p id="kanban-project-desc" class="text-xs text-slate-500">Description du projet</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-3">
+                            <button onclick="openCreateTaskModal()" class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl shadow-sm transition text-sm">
+                                <i class="fa-solid fa-plus"></i> Ajouter une tâche
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Kanban Columns Grid -->
+                    <div class="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-start overflow-x-auto pb-4">
+                        
+                        <!-- COLUMN 1: TODO -->
+                        <div class="kanban-col bg-slate-200/70 rounded-2xl p-3.5 border border-slate-300/60 flex flex-col"
+                             ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 'TODO')">
+                            <div class="flex items-center justify-between mb-3 px-1">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-3 h-3 rounded-full bg-slate-400"></span>
+                                    <h3 class="font-bold text-xs uppercase tracking-wider text-slate-700">À faire</h3>
+                                </div>
+                                <span id="count-TODO" class="px-2 py-0.5 rounded-full text-xs font-bold bg-white text-slate-600 shadow-sm">0</span>
+                            </div>
+                            <div id="col-TODO" class="space-y-3 flex-1 overflow-y-auto"></div>
+                        </div>
+
+                        <!-- COLUMN 2: IN_PROGRESS -->
+                        <div class="kanban-col bg-amber-50/60 rounded-2xl p-3.5 border border-amber-200/80 flex flex-col"
+                             ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 'IN_PROGRESS')">
+                            <div class="flex items-center justify-between mb-3 px-1">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-3 h-3 rounded-full bg-amber-500"></span>
+                                    <h3 class="font-bold text-xs uppercase tracking-wider text-amber-900">En cours</h3>
+                                </div>
+                                <span id="count-IN_PROGRESS" class="px-2 py-0.5 rounded-full text-xs font-bold bg-white text-amber-800 shadow-sm">0</span>
+                            </div>
+                            <div id="col-IN_PROGRESS" class="space-y-3 flex-1 overflow-y-auto"></div>
+                        </div>
+
+                        <!-- COLUMN 3: REVIEW -->
+                        <div class="kanban-col bg-purple-50/60 rounded-2xl p-3.5 border border-purple-200/80 flex flex-col"
+                             ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 'REVIEW')">
+                            <div class="flex items-center justify-between mb-3 px-1">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-3 h-3 rounded-full bg-purple-500"></span>
+                                    <h3 class="font-bold text-xs uppercase tracking-wider text-purple-900">En revue</h3>
+                                </div>
+                                <span id="count-REVIEW" class="px-2 py-0.5 rounded-full text-xs font-bold bg-white text-purple-800 shadow-sm">0</span>
+                            </div>
+                            <div id="col-REVIEW" class="space-y-3 flex-1 overflow-y-auto"></div>
+                        </div>
+
+                        <!-- COLUMN 4: DONE -->
+                        <div class="kanban-col bg-emerald-50/60 rounded-2xl p-3.5 border border-emerald-200/80 flex flex-col"
+                             ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 'DONE')">
+                            <div class="flex items-center justify-between mb-3 px-1">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+                                    <h3 class="font-bold text-xs uppercase tracking-wider text-emerald-900">Terminé</h3>
+                                </div>
+                                <span id="count-DONE" class="px-2 py-0.5 rounded-full text-xs font-bold bg-white text-emerald-800 shadow-sm">0</span>
+                            </div>
+                            <div id="col-DONE" class="space-y-3 flex-1 overflow-y-auto"></div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- VIEW 3: TEAM / USERS -->
+                <div id="view-team" class="space-y-6 hidden">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Collaborateurs & Équipe</h2>
+                            <p class="text-sm text-slate-500">Membres rattachés à votre entreprise cliente (scellés par le <code class="text-xs bg-slate-200 px-1 py-0.5 rounded font-mono">company_id</code>).</p>
+                        </div>
+                        <button id="btn-invite-user" onclick="openCreateUserModal()" class="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl shadow-sm transition text-sm">
+                            <i class="fa-solid fa-user-plus"></i> Ajouter un collaborateur
+                        </button>
+                    </div>
+
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                        <table class="min-w-full divide-y divide-slate-200 text-sm">
+                            <thead class="bg-slate-50 text-slate-500 uppercase font-semibold text-xs">
+                                <tr>
+                                    <th class="px-6 py-3.5 text-left">Collaborateur</th>
+                                    <th class="px-6 py-3.5 text-left">Rôle</th>
+                                    <th class="px-6 py-3.5 text-left">Statut</th>
+                                    <th class="px-6 py-3.5 text-left">Date d'ajout</th>
+                                    <th class="px-6 py-3.5 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-table-body" class="divide-y divide-slate-100 text-slate-700">
+                                <!-- Loaded dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- VIEW 4: COMPANY SETTINGS -->
+                <div id="view-settings" class="max-w-3xl space-y-6 hidden">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Paramètres de l'entreprise</h2>
+                        <p class="text-sm text-slate-500">Gestion des informations relatives à votre organisation cliente SaaS.</p>
+                    </div>
+
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-6">
+                        <form id="form-update-company" onsubmit="handleUpdateCompany(event)" class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500">Nom de l'entreprise</label>
+                                <input type="text" id="settings-company-name" required
+                                       class="mt-1 block w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-800 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500">Description</label>
+                                <textarea id="settings-company-desc" rows="3"
+                                          class="mt-1 block w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-800 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                            </div>
+                            <div id="settings-company-meta" class="text-xs text-slate-400 pt-2 border-t border-slate-100">
+                                Identifiant Tenant : <span class="font-mono text-slate-600" id="settings-company-id">...</span>
+                            </div>
+                            <button type="submit" id="btn-save-company" class="py-2.5 px-5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl text-sm transition">
+                                Enregistrer les modifications
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Danger Zone -->
+                    <div class="bg-rose-50/70 border border-rose-200 rounded-2xl p-6">
+                        <h3 class="text-sm font-bold text-rose-900 uppercase tracking-wider mb-1">Zone de danger</h3>
+                        <p class="text-xs text-rose-700 mb-4">La suppression de votre entreprise entraînera la suppression immédiate et en cascade de l'ensemble des projets, tâches Kanban et utilisateurs associés.</p>
+                        <button onclick="handleDeleteCompany()" class="py-2.5 px-4 bg-rose-600 hover:bg-rose-700 text-white font-medium rounded-xl text-xs transition">
+                            <i class="fa-solid fa-trash mr-1.5"></i> Supprimer définitivement l'entreprise
+                        </button>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- MODALS                                     -->
+    <!-- ========================================== -->
+
+    <!-- MODAL 1: CREATE PROJECT -->
+    <div id="modal-project" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm hidden modal-backdrop">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 modal-content border border-slate-200">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <h3 class="font-bold text-lg text-slate-900">Créer un nouveau projet</h3>
+                <button onclick="closeModal('modal-project')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form onsubmit="handleCreateProject(event)" class="mt-4 space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600">Nom du projet *</label>
+                    <input type="text" id="proj-name" required placeholder="ex: Refonte Site E-commerce"
+                           class="mt-1 block w-full px-4 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600">Description</label>
+                    <textarea id="proj-desc" rows="3" placeholder="Objectifs et jalons du projet..."
+                              class="mt-1 block w-full px-4 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">Membres affectés au projet</label>
+                    <div id="proj-members-select" class="max-h-36 overflow-y-auto border border-slate-200 rounded-xl p-2 space-y-1 bg-slate-50 text-xs">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </div>
+                <div class="pt-3 flex justify-end gap-2 border-t border-slate-100">
+                    <button type="button" onclick="closeModal('modal-project')" class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 text-sm font-medium">Annuler</button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-medium">Créer le projet</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 2: CREATE TASK -->
+    <div id="modal-task" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm hidden modal-backdrop">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 modal-content border border-slate-200">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <h3 class="font-bold text-lg text-slate-900">Ajouter une tâche Kanban</h3>
+                <button onclick="closeModal('modal-task')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form onsubmit="handleCreateTask(event)" class="mt-4 space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600">Titre de la tâche *</label>
+                    <input type="text" id="task-title" required placeholder="ex: Intégrer la maquette de la page d'accueil"
+                           class="mt-1 block w-full px-4 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600">Description</label>
+                    <textarea id="task-desc" rows="3" placeholder="Détails, spécifications..."
+                              class="mt-1 block w-full px-4 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600">Colonne initiale</label>
+                        <select id="task-status" class="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-xl text-sm bg-white">
+                            <option value="TODO">À faire (TODO)</option>
+                            <option value="IN_PROGRESS">En cours</option>
+                            <option value="REVIEW">En revue</option>
+                            <option value="DONE">Terminé</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600">Priorité</label>
+                        <select id="task-priority" class="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-xl text-sm bg-white">
+                            <option value="LOW">Basse</option>
+                            <option value="MEDIUM" selected>Moyenne</option>
+                            <option value="HIGH">Haute</option>
+                            <option value="URGENT">Urgente 🔥</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600">Attribuer à un collaborateur</label>
+                    <select id="task-assigned-user" class="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-xl text-sm bg-white">
+                        <option value="">-- Non attribuée --</option>
+                        <!-- Loaded dynamically -->
+                    </select>
+                </div>
+                <div class="pt-3 flex justify-end gap-2 border-t border-slate-100">
+                    <button type="button" onclick="closeModal('modal-task')" class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 text-sm font-medium">Annuler</button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-medium">Créer la tâche</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 3: CREATE USER -->
+    <div id="modal-user" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm hidden modal-backdrop">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 modal-content border border-slate-200">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <h3 class="font-bold text-lg text-slate-900">Ajouter un collaborateur</h3>
+                <button onclick="closeModal('modal-user')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <p class="text-xs text-slate-500 mt-1">Le collaborateur sera automatiquement scellé dans votre organisation cliente.</p>
+            <form onsubmit="handleCreateUser(event)" class="mt-4 space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600">Nom complet *</label>
+                    <input type="text" id="newuser-name" required placeholder="Bob Martin"
+                           class="mt-1 block w-full px-4 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600">Email professionnel *</label>
+                    <input type="email" id="newuser-email" required placeholder="bob@acme.com"
+                           class="mt-1 block w-full px-4 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600">Mot de passe temporaire *</label>
+                    <input type="password" id="newuser-password" required minlength="6" placeholder="••••••••"
+                           class="mt-1 block w-full px-4 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600">Rôle dans l'entreprise</label>
+                    <select id="newuser-role" class="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-xl text-sm bg-white">
+                        <option value="member" selected>Membre (Collaborateur)</option>
+                        <option value="admin">Administrateur</option>
+                    </select>
+                </div>
+                <div class="pt-3 flex justify-end gap-2 border-t border-slate-100">
+                    <button type="button" onclick="closeModal('modal-user')" class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 text-sm font-medium">Annuler</button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-medium">Créer le compte</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MAIN JAVASCRIPT APPLICATION LOGIC -->
+    <script src="/static/app.js"></script>
+</body>
+</html>
