@@ -99,6 +99,13 @@ def main():
     print(f"  OK -> Collaborateurs trouvés chez Acme Corp : {emails}")
     assert "alice@acme.com" in emails and "bob@acme.com" in emails
 
+    # Test modification d'utilisateur (PUT /users/{id})
+    bob_id = next(u["id"] for u in acme_users if u["email"] == "bob@acme.com")
+    status_code, updated_bob = api_request("PUT", f"/users/{bob_id}", {"full_name": "Bob Martin Updated"}, token=alice_token)
+    assert status_code == 200
+    assert updated_bob["full_name"] == "Bob Martin Updated"
+    print("  OK -> Modification utilisateur testée avec succès (PUT /users/{id})")
+
     # 5. Création de l'Entreprise B ('Beta Inc') et Admin Charlie
     print("\n[5/7] Enregistrement Entreprise B ('Beta Inc') et Admin Charlie...")
     status_code, charlie_auth = api_request("POST", "/auth/register-company", {

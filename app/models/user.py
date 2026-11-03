@@ -24,6 +24,13 @@ class UserCreate(UserBase):
     # pour garantir l'isolation logicielle stricte entre entreprises clientes.
 
 
+class UserUpdate(MongoBaseModel):
+    full_name: Optional[str] = Field(None, min_length=2, max_length=100, description="Nom complet")
+    role: Optional[UserRole] = Field(None, description="Rôle utilisateur (admin ou member)")
+    is_active: Optional[bool] = Field(None, description="Statut actif/inactif du compte")
+    password: Optional[str] = Field(None, min_length=6, description="Nouveau mot de passe facultatif")
+
+
 class UserResponse(UserBase):
     id: PyObjectId = Field(alias="_id", serialization_alias="id")
     company_id: PyObjectId = Field(..., description="Entreprise cliente à laquelle appartient l'utilisateur")

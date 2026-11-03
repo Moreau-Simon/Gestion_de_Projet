@@ -6,7 +6,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from app.api.deps import get_current_admin_user, get_current_user
 from app.core.database import get_database
 from app.core.security import get_password_hash
-from app.models.user import UserCreate, UserResponse, UserRole
+from app.models.user import UserCreate, UserResponse, UserRole, UserUpdate
 
 router = APIRouter(prefix="/users", tags=["Gestion des Utilisateurs"])
 
@@ -125,6 +125,60 @@ async def get_user_by_id(
     doc["_id"] = str(doc["_id"])
     doc["company_id"] = str(doc["company_id"])
     return UserResponse(**doc)
+
+
+@router.put(
+    "/{user_id}",
+    response_model=UserResponse,
+    summary="Mettre à jour les informations d'un collaborateur (Admin)"
+)
+async def update_user(
+    user_id: str,
+    user_in: UserUpdate,
+    current_admin: UserResponse = Depends(get_current_admin_user),
+    db: AsyncIOMotorDatabase = Depends(get_database)
+):
+    """
+    Permet à un administrateur de modifier les informations d'un collaborateur de son entreprise
+    (nom, rôle, mot de passe, statut actif/inactif). L'isolation logicielle est strictement respectée.
+    """
+    if not ObjectId.is_valid(user_id):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Identifiant utilisateur invalide."
+        )
+
+    update_data = {k: v for k, v in user_in.model_dump(exclude_unset=True).items() if v is not None}
+    if not update_data:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Aucune donnée fournie pour la mise à jour."
+        )
+
+    if "password" in update_data:
+        update_data["hashed_password"] = get_password_hash(update_data.pop("password"))
+
+    if "role" in update_data and hasattr(update_data["role"], "value"):
+        update_data["role"] = update_data["role"].value
+
+    result = await db.users.find_one_and_update(
+        {
+            "_id": ObjectId(user_id),
+            "company_id": ObjectId(current_admin.company_id)
+        },
+        {"$set": update_data},
+        return_document=True
+    )
+
+    if not result:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Utilisateur non trouvé au sein de votre entreprise."
+        )
+
+    result["_id"] = str(result["_id"])
+    result["company_id"] = str(result["company_id"])
+    return UserResponse(**result)
 
 
 @router.delete(

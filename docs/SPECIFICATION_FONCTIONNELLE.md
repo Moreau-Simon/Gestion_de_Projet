@@ -28,6 +28,7 @@ L'application est une plateforme SaaS (Software as a Service) multi-entreprises 
 - **Création de collaborateur (`POST /api/v1/users/`)** : Réservé aux administrateurs. L'utilisateur créé hérite automatiquement et immuablement du `company_id` de l'administrateur.
 - **Liste des collaborateurs (`GET /api/v1/users/`)** : Affiche uniquement les utilisateurs de la même entreprise.
 - **Consultation d'un profil (`GET /api/v1/users/{id}`)** : Accès refusé (404) si l'utilisateur ciblé appartient à un autre locataire.
+- **Mise à jour d'un collaborateur (`PUT /api/v1/users/{id}`)** : Modification du nom, du rôle (admin/member), du mot de passe ou du statut actif/inactif par un administrateur.
 - **Suppression d'un compte (`DELETE /api/v1/users/{id}`)** : Suppression contrôlée au sein de l'entreprise.
 
 ### 3.3 Gestion des Projets
