@@ -24,8 +24,7 @@ L'application permet à chaque entreprise cliente de disposer d'un espace de tra
 ## 3. Matrice Détaillée des Fonctionnalités
 
 ### 3.1 Onboarding, Entreprises & Authentification Multi-Tenant
-- **Création d'Entreprise & Premier Administrateur (`POST /api/v1/auth/register-company`)** : Point d'entrée SaaS réalisant atomiquement l'enregistrement de l'entreprise et la création de son compte administrateur initial avec délivrance d'un jeton JWT signé.
-- **Création directe d'Entreprise (`POST /api/v1/companies/`)** : Alternative REST directe pour instancier une entité entreprise.
+- **Création d'Entreprise & Premier Administrateur (`POST /api/v1/auth/register-company`)** : Point d'entrée SaaS sécurisé réalisant atomiquement l'enregistrement de l'entreprise et la création de son compte administrateur initial avec délivrance d'un jeton JWT signé.
 - **Connexion JWT (`POST /api/v1/auth/login` et `/login-json`)** : Authentification par email/mot de passe générant un jeton Bearer JWT incluant l'identifiant utilisateur (`sub`) et l'identifiant d'entreprise (`company_id`).
 - **Profil Utilisateur Courant (`GET /api/v1/auth/me`)** : Récupération des informations d'identité de la session active.
 - **Consultation de l'Entreprise (`GET /api/v1/companies/me` et `GET /api/v1/companies/{id}`)** : Récupération des informations de son entreprise cliente.

@@ -24,7 +24,7 @@ Plateforme applicative SaaS collaborative multi-entreprises développée en **Py
 
 Conformément aux exigences strictes du livrable, aucune installation manuelle de dépendances n'est requise. Seuls Docker et Docker Compose sont nécessaires.
 
-> **Note après clonage Git** : Un fichier `.env` prêt à l'emploi est inclus dans le projet. Si vous le clonez sur un environnement neuf sans `.env`, copiez simplement le modèle : `cp .env.example .env` (ou `copy .env.example .env` sous Windows PowerShell).
+> **Démarrage 100% autonome** : Le fichier `compose.yml` intègre des valeurs de repli par défaut pour l'ensemble des variables d'environnement. L'application démarre donc immédiatement sans nécessiter la moindre configuration manuelle ni création de fichier `.env`. Si vous souhaitez personnaliser les paramètres (URI MongoDB, secret JWT), vous pouvez copier le modèle fourni : `cp .env.example .env` (ou `copy .env.example .env` sous Windows).
 
 À la racine du projet, lancez :
 
@@ -276,8 +276,7 @@ FastAPI génère la documentation interactive OpenAPI sur :
 ```text
 Gestion_de_Projet/
 ├── .dockerignore                  # Fichiers exclus du build Docker
-├── .env.example                   # Modèle de variables d'environnement
-├── .env                           # Configuration active
+├── .env.example                   # Modèle de variables d'environnement (prêt à l'emploi)
 ├── .gitignore                     # Exclusion des fichiers temporaires Git
 ├── compose.yml                    # Déclaration Docker Compose (App + MongoDB 7.0)
 ├── Dockerfile                     # Image optimisée Python 3.11-slim (non-root)
