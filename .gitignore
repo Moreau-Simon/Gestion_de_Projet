@@ -218,3 +218,11 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+
+# Binaires et archives generees (ne jamais versionner)
+*.zip
+*.tar.gz
+
+# Outils d'analyse statique
+.embold/

@@ -11,40 +11,6 @@ from app.models.user import UserResponse
 router = APIRouter(prefix="/companies", tags=["Gestion de l'Entreprise"])
 
 
-@router.post(
-    "/",
-    response_model=CompanyResponse,
-    status_code=status.HTTP_201_CREATED,
-    summary="Créer une nouvelle entreprise (Alternative REST directe)"
-)
-async def create_company(
-    company_in: CompanyCreate,
-    db: AsyncIOMotorDatabase = Depends(get_database)
-):
-    """
-    Crée une entreprise cliente dans la base de données.
-    Pour l'inscription complète SaaS (Entreprise + Premier Administrateur + Token JWT),
-    utiliser de préférence /auth/register-company.
-    """
-    existing = await db.companies.find_one({"name": company_in.name})
-    if existing:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Une entreprise avec ce nom existe déjà."
-        )
-
-    now = datetime.now(timezone.utc)
-    doc = {
-        "name": company_in.name,
-        "description": company_in.description,
-        "created_at": now,
-        "updated_at": now,
-    }
-    result = await db.companies.insert_one(doc)
-    doc["_id"] = str(result.inserted_id)
-    return CompanyResponse(**doc)
-
-
 @router.get(
     "/",
     response_model=List[CompanyResponse],
