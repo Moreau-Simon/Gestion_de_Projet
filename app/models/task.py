@@ -20,7 +20,7 @@ class TaskPriority(str, Enum):
 
 
 class TaskBase(MongoBaseModel):
-    title: str = Field(..., min_length=2, max_length=200, description="Titre descriptif de la tâche")
+    title: str = Field(..., min_length=1, max_length=200, description="Titre descriptif de la tâche")
     description: Optional[str] = Field(None, max_length=2000, description="Détails de la tâche")
     status: TaskStatus = Field(default=TaskStatus.TODO, description="Statut de la tâche (colonne Kanban)")
     priority: TaskPriority = Field(default=TaskPriority.MEDIUM, description="Niveau de priorité")
@@ -32,7 +32,7 @@ class TaskCreate(TaskBase):
 
 
 class TaskUpdate(MongoBaseModel):
-    title: Optional[str] = Field(None, min_length=2, max_length=200)
+    title: Optional[str] = Field(None, min_length=1, max_length=200)
     description: Optional[str] = Field(None, max_length=2000)
     status: Optional[TaskStatus] = None
     priority: Optional[TaskPriority] = None

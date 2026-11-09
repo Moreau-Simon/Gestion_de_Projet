@@ -46,7 +46,7 @@ def main():
     print("=" * 70)
 
     # 1. Test du Healthcheck
-    print("\n[1/7] Test de santé applicatif (/health)...")
+    print("\n[1/9] Test de santé applicatif (/health)...")
     req = urllib.request.Request("http://localhost:8000/health", method="GET")
     with urllib.request.urlopen(req) as resp:
         health_data = json.loads(resp.read().decode("utf-8"))
@@ -55,7 +55,7 @@ def main():
         print(f"  OK -> MongoDB connecté : {health_data['database_name']}")
 
     # 2. Création de l'Entreprise A et Admin Alice
-    print("\n[2/7] Enregistrement Entreprise A ('Acme Corp') et Admin Alice...")
+    print("\n[2/9] Enregistrement Entreprise A ('Acme Corp') et Admin Alice...")
     status_code, alice_auth = api_request("POST", "/auth/register-company", {
         "company_name": "Acme Corp",
         "company_description": "Fournisseur de solutions logicielles",
@@ -76,7 +76,7 @@ def main():
     print(f"  OK -> Alice authentifiée (Company ID: {acme_company_id})")
 
     # 3. Création d'un utilisateur collaborateur chez Acme Corp
-    print("\n[3/7] Création d'un collaborateur 'Bob' chez Acme Corp par l'Admin Alice...")
+    print("\n[3/9] Création d'un collaborateur 'Bob' chez Acme Corp par l'Admin Alice...")
     status_code, bob_user = api_request("POST", "/users/", {
         "email": "bob@acme.com",
         "full_name": "Bob Martin",
@@ -92,7 +92,7 @@ def main():
         print(f"  OK -> Bob créé avec succès (ID: {bob_user['id']}, Company: {bob_user['company_id']})")
 
     # 4. Liste des utilisateurs chez Acme Corp
-    print("\n[4/7] Consultation des utilisateurs d'Acme Corp...")
+    print("\n[4/9] Consultation des utilisateurs d'Acme Corp...")
     status_code, acme_users = api_request("GET", "/users/", token=alice_token)
     assert status_code == 200
     emails = [u["email"] for u in acme_users]
@@ -107,7 +107,7 @@ def main():
     print("  OK -> Modification utilisateur testée avec succès (PUT /users/{id})")
 
     # 5. Création de l'Entreprise B ('Beta Inc') et Admin Charlie
-    print("\n[5/7] Enregistrement Entreprise B ('Beta Inc') et Admin Charlie...")
+    print("\n[5/9] Enregistrement Entreprise B ('Beta Inc') et Admin Charlie...")
     status_code, charlie_auth = api_request("POST", "/auth/register-company", {
         "company_name": "Beta Inc",
         "company_description": "Concurrent ou autre client SaaS",
@@ -128,7 +128,7 @@ def main():
     assert acme_company_id != beta_company_id, "Les deux entreprises doivent avoir des ID distincts !"
 
     # 6. Test d'étanchéité stricte (Isolation Multi-Tenant)
-    print("\n[6/7] Test de l'isolation logicielle stricte...")
+    print("\n[6/9] Test de l'isolation logicielle stricte...")
     # Charlie liste ses utilisateurs : il ne doit voir QUE lui-même, AUCUN utilisateur d'Acme !
     status_code, beta_users = api_request("GET", "/users/", token=charlie_token)
     beta_emails = [u["email"] for u in beta_users]
@@ -142,8 +142,8 @@ def main():
     assert status_code == 404, f"FAILLE D'ISOLATION : Charlie a pu requêter Bob ! Statut: {status_code}"
     print("  OK -> Tentative d'accès cross-tenant bloquée (HTTP 404 Not Found pour Charlie) !")
 
-    # 7. Création d'un projet et visualisation Kanban
-    print("\n[7/7] Création d'un projet et d'une tâche Kanban chez Acme Corp...")
+    # 7. Création d'un projet et manipulation complète des tâches (CRUD + Kanban)
+    print("\n[7/9] Création d'un projet et cycle de vie complet des tâches (CRUD + Kanban)...")
     status_code, project = api_request("POST", "/projects/", {
         "name": "Projet Alpha",
         "description": "Lancement du produit",
@@ -153,6 +153,7 @@ def main():
     project_id = project["id"]
     print(f"  OK -> Projet créé : '{project['name']}' (ID: {project_id})")
 
+    # Création d'une tâche
     status_code, task = api_request("POST", "/tasks/", {
         "title": "Développer le MVP",
         "description": "Architecture backend FastAPI + Mongo",
@@ -163,16 +164,30 @@ def main():
     }, token=alice_token)
     assert status_code == 201
     task_id = task["id"]
-    print(f"  OK -> Tâche créée : '{task['title']}' assignée à Bob")
+    print(f"  OK -> Tâche créée : '{task['title']}' assignée à Bob (ID: {task_id})")
+
+    # Lecture individuelle d'une tâche
+    status_code, fetched_task = api_request("GET", f"/tasks/{task_id}", token=alice_token)
+    assert status_code == 200
+    assert fetched_task["id"] == task_id
+    print("  OK -> Consultation unitaire de la tâche validée (GET /tasks/{id})")
+
+    # Déplacement de la tâche dans le Kanban (TODO -> IN_PROGRESS)
+    status_code, updated_task = api_request("PUT", f"/tasks/{task_id}", {
+        "status": "IN_PROGRESS"
+    }, token=alice_token)
+    assert status_code == 200
+    assert updated_task["status"] == "IN_PROGRESS"
+    print("  OK -> Transition de statut Kanban validée (PUT /tasks/{id} -> IN_PROGRESS)")
 
     # Visualisation du tableau Kanban
     status_code, kanban = api_request("GET", f"/tasks/kanban/{project_id}", token=alice_token)
     assert status_code == 200
-    assert len(kanban["columns"]["TODO"]) >= 1
-    print(f"  OK -> Tableau Kanban généré avec succès ({len(kanban['columns']['TODO'])} carte(s) dans TODO)")
+    assert len(kanban["columns"]["IN_PROGRESS"]) >= 1
+    print(f"  OK -> Tableau Kanban généré avec succès ({len(kanban['columns']['IN_PROGRESS'])} carte(s) dans IN_PROGRESS)")
 
     # 8. Test de Contrôle d'Accès par Rôle (RBAC)
-    print("\n[8/8] Test de sécurité RBAC (Suppression de projet réservée à l'administrateur)...")
+    print("\n[8/9] Test de sécurité RBAC (Suppression de projet réservée à l'administrateur)...")
     # Connexion en tant que Bob (member)
     status_code, bob_auth = api_request("POST", "/auth/login-json", {
         "email": "bob@acme.com",
@@ -185,6 +200,13 @@ def main():
     status_code, delete_res = api_request("DELETE", f"/projects/{project_id}", token=bob_token)
     assert status_code == 403, f"FAILLE DE SÉCURITÉ : Un simple membre a pu supprimer un projet ! Statut: {status_code}"
     print("  OK -> Tentative de suppression par un simple 'member' rejetée avec succès (HTTP 403 Forbidden) !")
+
+    # 9. Test de consultation et gestion de l'entreprise
+    print("\n[9/9] Test de consultation de l'entreprise (GET /companies/me)...")
+    status_code, company_info = api_request("GET", "/companies/me", token=alice_token)
+    assert status_code == 200
+    assert company_info["name"] == "Acme Corp"
+    print(f"  OK -> Informations de l'entreprise récupérées : {company_info['name']} (ID: {company_info['id']})")
 
     print("\n" + "=" * 70)
     print("TOUS LES TESTS SONT VALIDES AVEC SUCCES !")

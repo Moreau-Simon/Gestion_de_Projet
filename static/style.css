@@ -1,11 +1,16 @@
-/* Custom styles and animations */
+/* ================================================================
+   FlowSaaS — Modern Design System v2.0
+   Deep Violet + Glassmorphism + Micro-interactions
+   ================================================================ */
+
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 
+/* ── Base ─────────────────────────────────────────────────────── */
 body {
     font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
-/* Custom scrollbars */
+/* ── Custom Scrollbars ────────────────────────────────────────── */
 ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -21,56 +26,242 @@ body {
     background: #94a3b8;
 }
 
-/* Kanban column and drag styles */
+/* ── Animated Aurora Background (Auth Screen) ────────────────── */
+@keyframes auroraShift {
+    0%   { background-position: 0% 50%; }
+    25%  { background-position: 50% 100%; }
+    50%  { background-position: 100% 50%; }
+    75%  { background-position: 50% 0%; }
+    100% { background-position: 0% 50%; }
+}
+
+.aurora-bg {
+    background: linear-gradient(
+        -45deg,
+        #020617,
+        #0f172a,
+        #1e1b4b,
+        #2e1065,
+        #0f172a,
+        #020617
+    );
+    background-size: 400% 400%;
+    animation: auroraShift 18s ease infinite;
+}
+
+/* Subtle noise texture overlay for sidebar */
+.noise-overlay::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* ── Glassmorphism Auth Card ──────────────────────────────────── */
+.glass-card {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* ── Card Hover Lift ──────────────────────────────────────────── */
+.card-lift {
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.card-lift:hover {
+    transform: translateY(-2px);
+    box-shadow:
+        0 10px 25px -5px rgba(0, 0, 0, 0.1),
+        0 8px 10px -6px rgba(0, 0, 0, 0.06);
+}
+
+/* ── Kanban Column & Cards ────────────────────────────────────── */
 .kanban-col {
-    min-height: calc(100vh - 240px);
+    min-height: calc(100vh - 260px);
 }
 
 .kanban-card {
     transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
     cursor: grab;
 }
-
 .kanban-card:active {
     cursor: grabbing;
 }
-
 .kanban-card.dragging {
     opacity: 0.4;
-    transform: scale(0.98);
+    transform: scale(0.96) rotate(-1deg);
 }
 
 .kanban-col.drag-over {
-    background-color: #f1f5f9;
-    border-color: #6366f1;
+    background-color: rgba(139, 92, 246, 0.08);
+    border-color: #7c3aed;
     border-style: dashed;
 }
 
-/* Smooth modal animations */
+/* Kanban card priority left borders */
+.kanban-card-priority-LOW    { border-left: 4px solid #94a3b8; }
+.kanban-card-priority-MEDIUM { border-left: 4px solid #06b6d4; }
+.kanban-card-priority-HIGH   { border-left: 4px solid #f59e0b; }
+.kanban-card-priority-URGENT { border-left: 4px solid #f43f5e; }
+
+/* ── Page Transition (fade in) ────────────────────────────────── */
+@keyframes fadeInContent {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.view-transition {
+    animation: fadeInContent 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* ── Smooth Modal Animations ──────────────────────────────────── */
 .modal-backdrop {
-    animation: fadeIn 0.15s ease-out forwards;
+    animation: modalFadeIn 0.2s ease-out forwards;
 }
-
 .modal-content {
-    animation: slideUp 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation: modalSlideUp 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
-@keyframes fadeIn {
+@keyframes modalFadeIn {
     from { opacity: 0; }
-    to { opacity: 1; }
+    to   { opacity: 1; }
+}
+@keyframes modalSlideUp {
+    from { opacity: 0; transform: translateY(24px) scale(0.95); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-@keyframes slideUp {
-    from { opacity: 0; transform: translateY(12px) scale(0.98); }
-    to { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-/* Toast notifications */
+/* ── Toast Notifications with Progress Bar ────────────────────── */
 .toast {
-    animation: toastIn 0.25s ease forwards;
+    animation: toastSlideIn 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    position: relative;
+    overflow: hidden;
+}
+.toast::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.3);
+    animation: toastProgress 3.5s linear forwards;
 }
 
-@keyframes toastIn {
-    from { transform: translateX(100%); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
+@keyframes toastSlideIn {
+    from { transform: translateX(120%); opacity: 0; }
+    to   { transform: translateX(0); opacity: 1; }
 }
+@keyframes toastProgress {
+    from { width: 100%; }
+    to   { width: 0%; }
+}
+
+/* ── Micro-interactions ───────────────────────────────────────── */
+.btn-press {
+    transition: transform 0.1s ease, box-shadow 0.2s ease;
+}
+.btn-press:active {
+    transform: scale(0.96);
+}
+
+.icon-hover-rotate {
+    transition: transform 0.3s ease;
+}
+.icon-hover-rotate:hover i,
+.icon-hover-rotate:hover .icon-spin {
+    transform: rotate(15deg);
+    transition: transform 0.3s ease;
+}
+
+/* ── Loading Skeleton Placeholders ────────────────────────────── */
+@keyframes skeletonPulse {
+    0%, 100% { opacity: 0.4; }
+    50%      { opacity: 1; }
+}
+.skeleton {
+    background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+    background-size: 200% 100%;
+    animation: skeletonPulse 1.5s ease-in-out infinite;
+    border-radius: 8px;
+}
+
+/* ── Sidebar Active Nav Indicator ─────────────────────────────── */
+.nav-active {
+    background: linear-gradient(135deg, #7c3aed, #6d28d9);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+}
+
+/* ── Stat Card Glow ───────────────────────────────────────────── */
+.stat-card-violet {
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.08), rgba(139, 92, 246, 0.04));
+    border: 1px solid rgba(124, 58, 237, 0.15);
+}
+.stat-card-cyan {
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.08), rgba(6, 182, 212, 0.04));
+    border: 1px solid rgba(6, 182, 212, 0.15);
+}
+.stat-card-emerald {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(16, 185, 129, 0.04));
+    border: 1px solid rgba(16, 185, 129, 0.15);
+}
+.stat-card-amber {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.08), rgba(245, 158, 11, 0.04));
+    border: 1px solid rgba(245, 158, 11, 0.15);
+}
+
+/* ── Search bar focus ring ────────────────────────────────────── */
+.search-bar {
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.search-bar:focus-within {
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+    border-color: #7c3aed;
+}
+
+/* ── Dark mode toggle ─────────────────────────────────────────── */
+.dark-mode-btn {
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+.dark-mode-btn:hover {
+    transform: rotate(20deg);
+}
+
+/* ── Empty State SVG placeholder ──────────────────────────────── */
+.empty-state-illustration {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 1rem;
+    opacity: 0.6;
+}
+
+/* ── Sidebar gradient ─────────────────────────────────────────── */
+.sidebar-gradient {
+    background: linear-gradient(180deg, #020617 0%, #0f172a 100%);
+}
+
+/* ── Dark Mode Enhancements ───────────────────────────────────── */
+.dark ::-webkit-scrollbar-thumb {
+    background: #334155;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+    background: #475569;
+}
+.dark .skeleton {
+    background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+    background-size: 200% 100%;
+}
+.dark .kanban-col.drag-over {
+    background-color: rgba(139, 92, 246, 0.15);
+    border-color: #8b5cf6;
+}
+

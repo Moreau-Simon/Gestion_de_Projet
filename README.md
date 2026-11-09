@@ -1,21 +1,22 @@
-# SaaS Project Management Backend (Trello / Notion like)
+# SaaS Project Management Backend (Trello / Notion like) — FlowSaaS v2.0
 
 > **BUT 3 Informatique — R5.10 : Nouveaux paradigmes de bases de données**  
 > **TD1 : Startup – Outil de gestion de projet SaaS – PARTIE I**
 
-Backend applicatif SaaS multi-entreprises développé en **Python (FastAPI)** et s'appuyant sur **MongoDB**. L'application intègre une **isolation logicielle stricte** entre organisations clientes (multi-tenancy), une gestion complète des utilisateurs avec authentification sécurisée par jetons **JWT**, ainsi que la modélisation de projets et tâches visualisables sous forme de tableau **Kanban**.
+Plateforme applicative SaaS collaborative multi-entreprises développée en **Python (FastAPI)** et s'appuyant sur **MongoDB 7.0**. L'application intègre une **isolation logicielle stricte** entre organisations clientes (multi-tenancy via `company_id`), une gestion complète des utilisateurs avec authentification sécurisée par jetons **JWT**, un tableau de bord analytique en temps réel, un moteur de recherche globale multi-projets, ainsi qu'un tableau **Kanban interactif** en glisser-déposer (Drag & Drop natif).
 
 ---
 
 ## 📋 Table des matières
 1. [Démarrage rapide en une seule commande](#1-démarrage-rapide-en-une-seule-commande)
 2. [Architecture et Choix Techniques](#2-architecture-et-choix-techniques)
-3. [Configuration & Anticipation de la Réplication / Sharding (Partie II)](#3-configuration--anticipation-de-la-réplication--sharding-partie-ii)
-4. [Instructions pour tester la création d'un utilisateur et l'isolation](#4-instructions-pour-tester-la-création-dun-utilisateur-et-lisolation)
-5. [Interface Graphique Web (Application SaaS)](#5-interface-graphique-web-application-saas)
-6. [Documentation interactive (Swagger UI)](#6-documentation-interactive-swagger-ui)
-7. [Arborescence du projet](#7-arborescence-du-projet)
-8. [Spécifications techniques et fonctionnelles](#8-spécifications-techniques-et-fonctionnelles)
+3. [Nouveautés & Évolutions Majeures (v2.0)](#3-nouveautés--évolutions-majeures-v20)
+4. [Configuration & Anticipation de la Réplication / Sharding (Partie II)](#4-configuration--anticipation-de-la-réplication--sharding-partie-ii)
+5. [Instructions pour tester la création d'un utilisateur et l'isolation](#5-instructions-pour-tester-la-création-dun-utilisateur-et-lisolation)
+6. [Interface Graphique Web & Expérience Utilisateur](#6-interface-graphique-web--expérience-utilisateur)
+7. [Documentation interactive (Swagger UI)](#7-documentation-interactive-swagger-ui)
+8. [Arborescence du projet](#8-arborescence-du-projet)
+9. [Spécifications techniques et fonctionnelles](#9-spécifications-techniques-et-fonctionnelles)
 
 ---
 
@@ -36,10 +37,12 @@ docker compose up -d --build
 ### Que fait cette commande ?
 1. Lance le conteneur de base de données **MongoDB 7.0** avec un volume persistant `saas_mongo_data`.
 2. Exécute un **Healthcheck** sur MongoDB afin de s'assurer que le moteur est prêt à accepter des requêtes.
-3. Construit l'image Docker optimisée pour l'application Python (`python:3.11-slim`, utilisateur non-root, cache pip).
-4. Démarre le serveur FastAPI sur le port `8000` via Uvicorn une fois MongoDB prêt.
+3. Peuple automatiquement des **données de démonstration réalistes** au premier démarrage si la base est vide (*Acme Corp* avec Alice, Bob, un projet et 4 tâches Kanban, ainsi que *Beta Inc* avec Charlie).
+4. Construit l'image Docker optimisée pour l'application Python (`python:3.11-slim`, utilisateur non-root, cache pip).
+5. Démarre le serveur FastAPI sur le port `8000` via Uvicorn une fois MongoDB prêt.
 
 Pour vérifier que tout fonctionne :
+- **Application Web SPA** : [http://localhost:8000/](http://localhost:8000/)
 - **Santé de l'API & MongoDB** : [http://localhost:8000/health](http://localhost:8000/health)
 - **Documentation Swagger UI** : [http://localhost:8000/docs](http://localhost:8000/docs)
 
@@ -58,11 +61,48 @@ docker compose down
 | **Pilote MongoDB** | **Motor (AsyncIOMotorClient)** | Driver asynchrone officiel MongoDB pour Python, garantissant de très hautes performances I/O non-bloquantes. |
 | **Base de données** | **MongoDB 7.0** | Paradigme orienté document NoSQL idéal pour les structures hiérarchiques (Entreprise ➔ Projets ➔ Tâches). |
 | **Sécurité** | **Bcrypt & JWT (PyJWT)** | Hachage avec sel des mots de passe et jetons signés véhiculant l'identité et le `company_id`. |
+| **Frontend SPA** | **Vanilla JS + Tailwind CSS CDN** | Zéro build tool nécessaire, chargement instantané, composants modulaires et réactifs. |
 | **Conteneurisation** | **Docker & Compose** | Environnement reproductible, utilisateur `appuser` non-root, dépendances isolées. |
 
 ---
 
-## 3. Configuration & Anticipation de la Réplication / Sharding (Partie II)
+## 3. Nouveautés & Évolutions Majeures (v2.0)
+
+Cette version apporte des améliorations substantielles tant sur le plan technique (backend NoSQL) que sur l'expérience utilisateur (frontend) :
+
+### 🚀 Améliorations Backend & MongoDB
+1. **Requêtes NoSQL polymorphiques BSON/String** :
+   - Prise en charge native et transparente des identifiants stockés sous forme de `ObjectId` BSON ou de chaîne hexadécimale `str` via des filtres `{"$in": [ObjectId(id), str(id)]}` sur `company_id` et `project_id`.
+   - Élimine tout risque de document manquant ou masqué suite à des migrations ou des tests hétérogènes.
+2. **Tri chronologique naturel** :
+   - Tous les listings (`projects`, `tasks`) sont ordonnés par `.sort("created_at", -1)` pour que les nouveaux éléments créés apparaissent immédiatement au premier plan.
+3. **Seeding automatique au premier lancement (`seed_initial_data`)** :
+   - Dès la première initialisation de MongoDB, deux entreprises clientes indépendantes (*Acme Corp* et *Beta Inc*) sont injectées avec utilisateurs, projets et tâches Kanban complètes, rendant la plateforme immédiatement opérationnelle.
+4. **Validation Pydantic v2 résiliente** :
+   - Règles `min_length=1` adaptées sur les formulaires pour faciliter les tests sans contraintes bloquantes artificielles.
+
+### 🎨 Refonte Frontend & Expérience Utilisateur
+1. **Nouveau Tableau de Bord Analytique (Dashboard)** :
+   - 4 cartes KPI dynamiques animées (Projets actifs, Tâches totales, Tâches terminées avec %, Collaborateurs).
+   - Flux d'activité des 5 dernières tâches avec accès direct au tableau Kanban associé en un clic.
+2. **Moteur de Recherche Globale Multi-Projets (`⌘K` / `Ctrl+K`)** :
+   - Recherche en direct sur les **projets** ET sur les **tâches de tous les projets** (titre, description, priorité, statut, membre assigné, nom du projet parent).
+   - Menu déroulant popover instantané sous la barre de recherche + vue complète des résultats organisée en sections.
+   - Bouton de réinitialisation rapide (`✕`).
+3. **Mode Sombre Natif (Dark Mode)** :
+   - Bascule fluide clair/sombre via un bouton dédié dans la barre supérieure, avec persistance automatique dans `localStorage`.
+4. **Raccourcis Clavier Productivité** :
+   - `⌘K` / `Ctrl+K` : Focus sur la recherche globale.
+   - `D` : Navigation vers le Tableau de bord.
+   - `P` : Navigation vers les Projets.
+   - `M` : Navigation vers l'Équipe.
+   - `Esc` : Fermeture des modales et menus déroulants.
+5. **Design System & Micro-interactions** :
+   - Cartes avec bordures de priorité 4px, effet de survol `card-lift`, animation d'authentification Aurora et retour tactile `btn-press`.
+
+---
+
+## 4. Configuration & Anticipation de la Réplication / Sharding (Partie II)
 
 Dans la Partie II du TD, l'architecture MongoDB évoluera vers un cluster distribué avec **Replica Set** et **Sharding**.
 
@@ -92,7 +132,7 @@ L'isolation logicielle associe chaque document à un champ `company_id`. Les ind
 
 ---
 
-## 4. Instructions pour tester la création d'un utilisateur et l'isolation
+## 5. Instructions pour tester la création d'un utilisateur et l'isolation
 
 Vous pouvez tester l'application de deux façons :
 1. **Via le script de test automatisé fourni (`test_api.py`)**.
@@ -108,14 +148,16 @@ Une fois les conteneurs démarrés, exécutez simplement :
 python test_api.py
 ```
 
-Ce script valide l'ensemble du scénario en 7 étapes :
+Ce script valide l'ensemble du scénario en **9 étapes** exhaustives :
 1. Vérification de `/health` et connectivité MongoDB.
 2. Inscription d'une première entreprise (*Acme Corp*) et de son administrateur (*Alice*).
 3. Création d'un collaborateur (*Bob*) assigné à *Acme Corp*.
-4. Liste des collaborateurs de l'entreprise *Acme Corp*.
+4. Liste des collaborateurs de l'entreprise *Acme Corp* et mise à jour d'un profil.
 5. Inscription d'une seconde entreprise concurrente (*Beta Inc*) et de son administrateur (*Charlie*).
 6. **Vérification de l'isolation logicielle stricte** : Charlie ne peut ni voir Bob dans sa liste, ni consulter sa fiche via son ID (renvoie HTTP `404 Not Found`).
-7. Création d'un projet et d'une tâche visualisée sur le tableau Kanban.
+7. Création d'un projet et cycle de vie complet des tâches (création, consultation unitaire `GET /tasks/{id}`, transition Kanban `TODO` ➔ `IN_PROGRESS`, visualisation Kanban `GET /tasks/kanban/{id}`).
+8. **Contrôle d'accès par rôle (RBAC)** : vérification qu'un simple membre ne peut pas supprimer un projet (rejet HTTP `403 Forbidden`).
+9. Consultation et gestion des informations de l'entreprise (`GET /companies/me`).
 
 ---
 
@@ -199,35 +241,37 @@ curl -X GET "http://localhost:8000/api/v1/users/" \
 
 ---
 
-## 5. Interface Graphique Web (Application SaaS)
+## 6. Interface Graphique Web & Expérience Utilisateur
 
-Une interface moderne Single Page Application (inspirée de Trello et Notion) est servie directement à la racine du projet :
+L'interface Single Page Application moderne (inspirée de Linear, Trello et Notion) est servie directement à la racine :
 👉 **[http://localhost:8000/](http://localhost:8000/)**
 
-### Fonctionnalités disponibles dans le navigateur :
-- **Onboarding SaaS & Connexion** : Inscription d'entreprises clientes ou connexion rapide avec les comptes de démonstration (Alice / Charlie).
-- **Gestion des Projets** : Création de projets collaboratifs, affectation d'équipes et suppression.
-- **Tableau Kanban Interactif** :
-  - Colonnes d'état : *À faire*, *En cours*, *En revue*, *Terminé*.
-  - **Glisser-Déposer (Drag & Drop natif)** des cartes de tâches en temps réel avec persistance automatique dans MongoDB.
-  - Création de tâches avec niveaux de priorité (Urgente, Haute, Moyenne, Basse) et assignation de collaborateur.
-- **Gestion de l'Équipe (Multi-tenant)** : Invitation de nouveaux membres, consultation des statuts et contrôle d'accès RBAC.
-- **Paramètres de l'Organisation** : Mise à jour du nom de l'entreprise et suppression sécurisée en cascade.
+### Vues & fonctionnalités disponibles :
+- **Tableau de bord (Dashboard)** : Métriques synthétiques, barres d'avancement des tâches et flux des créations récentes.
+- **Projets collaboratifs** : Grille avec bordures thématiques, jauge de membres et création en modal.
+- **Tableau Kanban interactif** :
+  - 4 colonnes d'état : *À faire*, *En cours*, *En revue*, *Terminé*.
+  - **Glisser-Déposer HTML5 natif** des cartes avec mise à jour optimiste et sauvegarde immédiate dans MongoDB.
+  - Création de tâches avec priorités visuelles (Urgente 🔥, Haute, Moyenne, Basse) et assignation nominative.
+- **Recherche globale instantanée** : Recherche transversale multi-projets avec popover en direct et raccourci clavier `⌘K`.
+- **Mode Sombre (Dark Mode)** : Thème sombre complet préservant le confort visuel.
+- **Gestion d'équipe (RBAC)** : Invitation de membres, consultation des rôles et contrôle strict des suppressions réservées aux administrateurs.
+- **Paramètres Entreprise & Zone de danger** : Édition des métadonnées et suppression en cascade sécurisée par confirmation du nom exact.
 
 ---
 
-## 6. Documentation interactive (Swagger UI)
+## 7. Documentation interactive (Swagger UI)
 
-FastAPI génère également la documentation interactive OpenAPI sur :
+FastAPI génère la documentation interactive OpenAPI sur :
 👉 **[http://localhost:8000/docs](http://localhost:8000/docs)**
 
 1. Cliquez sur le bouton vert **"Authorize"** en haut à droite.
-2. Saisissez l'email (`username`) et le mot de passe (`password`) créés lors du register.
-3. Vous pouvez désormais tester l'ensemble des endpoints directement depuis votre navigateur web !
+2. Saisissez l'email (`username`) et le mot de passe (`password`) créés lors du register (ex: `alice@acme.com` / `Password123!`).
+3. Vous pouvez désormais tester l'ensemble des endpoints CRUD directement depuis votre navigateur !
 
 ---
 
-## 7. Arborescence du projet
+## 8. Arborescence du projet
 
 ```text
 Gestion_de_Projet/
@@ -235,20 +279,20 @@ Gestion_de_Projet/
 ├── .env.example                   # Modèle de variables d'environnement
 ├── .env                           # Configuration active
 ├── .gitignore                     # Exclusion des fichiers temporaires Git
-├── compose.yml                    # Déclaration Docker Compose (App + MongoDB)
-├── Dockerfile                     # Image optimisée Python 3.11-slim
+├── compose.yml                    # Déclaration Docker Compose (App + MongoDB 7.0)
+├── Dockerfile                     # Image optimisée Python 3.11-slim (non-root)
 ├── requirements.txt               # Dépendances applicatives (FastAPI, Motor, Bcrypt...)
-├── test_api.py                    # Script de test automatisé (stdlib Python)
-├── README.md                      # Documentation d'installation et d'utilisation
+├── test_api.py                    # Script de validation automatisé en 9 étapes
+├── README.md                      # Documentation d'installation et guide d'utilisation
 │
 ├── docs/                          # Spécifications pour le livrable TD1
-│   ├── SPECIFICATION_TECHNIQUE.md    # Architecture MongoDB et schémas JSON
-│   └── SPECIFICATION_FONCTIONNELLE.md # Description détaillée des fonctionnalités
+│   ├── SPECIFICATION_TECHNIQUE.md    # Architecture MongoDB, sharding et schémas JSON
+│   └── SPECIFICATION_FONCTIONNELLE.md # Description détaillée des fonctionnalités & RBAC
 │
-├── static/                        # Interface Web Single Page Application (SPA)
-│   ├── index.html                 # Structure de l'interface utilisateur
-│   ├── app.js                     # Logique applicative, API et Drag & Drop Kanban
-│   └── style.css                  # Feuilles de styles et animations
+├── static/                        # Interface Web Single Page Application (SPA) v2.0
+│   ├── index.html                 # Structure HTML5 sémantique, dashboard et popover
+│   ├── app.js                     # Logique applicative, Drag & Drop, Dark mode et recherche
+│   └── style.css                  # Feuilles de styles, glassmorphism et animations
 │
 └── app/                           # Code source de l'application
     ├── __init__.py
@@ -256,7 +300,7 @@ Gestion_de_Projet/
     │
     ├── core/                      # Configuration centrale
     │   ├── config.py              # Chargement des variables d'environnement
-    │   ├── database.py            # Client Motor MongoDB, ping et indexation
+    │   ├── database.py            # Client Motor MongoDB, ping, indexation et seeding
     │   └── security.py            # Hachage bcrypt et signature des JWT
     │
     ├── models/                    # Modèles Pydantic & Schémas BSON
@@ -273,15 +317,15 @@ Gestion_de_Projet/
             └── endpoints/
                 ├── auth.py        # Inscription et connexion
                 ├── users.py       # CRUD utilisateurs scoped par entreprise
-                ├── companies.py   # Gestion de l'entreprise
+                ├── companies.py   # Consultation et gestion de l'entreprise
                 ├── projects.py    # CRUD projets
-                └── tasks.py       # CRUD tâches et vue Kanban
+                └── tasks.py       # CRUD tâches et vue Kanban groupée
 ```
 
 ---
 
-## 8. Spécifications techniques et fonctionnelles
+## 9. Spécifications techniques et fonctionnelles
 
 Conformément aux livrables demandés dans le sujet :
-- **Spécification technique** : Retrouvez l'architecture de la base de données et les structures JSON détaillées dans [`docs/SPECIFICATION_TECHNIQUE.md`](docs/SPECIFICATION_TECHNIQUE.md).
-- **Spécification fonctionnelle** : Retrouvez le détail des cas d'usage et des rôles dans [`docs/SPECIFICATION_FONCTIONNELLE.md`](docs/SPECIFICATION_FONCTIONNELLE.md).
+- **Spécification technique** : Retrouvez l'architecture de la base de données, la modélisation NoSQL, les index composés et la stratégie de sharding dans [`docs/SPECIFICATION_TECHNIQUE.md`](docs/SPECIFICATION_TECHNIQUE.md).
+- **Spécification fonctionnelle** : Retrouvez la matrice des rôles (RBAC), les règles d'isolation et la description des endpoints dans [`docs/SPECIFICATION_FONCTIONNELLE.md`](docs/SPECIFICATION_FONCTIONNELLE.md).

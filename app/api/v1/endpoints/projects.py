@@ -89,7 +89,10 @@ async def list_projects(
     db: AsyncIOMotorDatabase = Depends(get_database)
 ):
     """Retourne la liste des projets appartenant exclusivement à l'entreprise de l'utilisateur."""
-    cursor = db.projects.find({"company_id": ObjectId(current_user.company_id)})
+    company_oid = ObjectId(current_user.company_id)
+    cursor = db.projects.find({
+        "company_id": {"$in": [company_oid, str(company_oid), str(current_user.company_id)]}
+    }).sort("created_at", -1)
     projects: List[ProjectResponse] = []
     async for doc in cursor:
         doc["_id"] = str(doc["_id"])
@@ -112,9 +115,10 @@ async def get_project(
     if not ObjectId.is_valid(project_id):
         raise HTTPException(status_code=400, detail="Identifiant de projet invalide.")
 
+    company_oid = ObjectId(current_user.company_id)
     doc = await db.projects.find_one({
         "_id": ObjectId(project_id),
-        "company_id": ObjectId(current_user.company_id)
+        "company_id": {"$in": [company_oid, str(company_oid), str(current_user.company_id)]}
     })
     if not doc:
         raise HTTPException(status_code=404, detail="Projet introuvable dans votre entreprise.")
@@ -162,7 +166,7 @@ async def update_project(
     update_data["updated_at"] = datetime.now(timezone.utc)
 
     result = await db.projects.find_one_and_update(
-        {"_id": ObjectId(project_id), "company_id": company_oid},
+        {"_id": ObjectId(project_id), "company_id": {"$in": [company_oid, str(company_oid), str(current_user.company_id)]}},
         {"$set": update_data},
         return_document=True
     )
@@ -191,7 +195,10 @@ async def delete_project(
     project_oid = ObjectId(project_id)
     company_oid = ObjectId(current_user.company_id)
 
-    result = await db.projects.delete_one({"_id": project_oid, "company_id": company_oid})
+    result = await db.projects.delete_one({
+        "_id": project_oid,
+        "company_id": {"$in": [company_oid, str(company_oid), str(current_user.company_id)]}
+    })
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Projet introuvable.")
 
