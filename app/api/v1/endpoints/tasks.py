@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from typing import Dict, List
+from typing import Dict, List, Optional
 from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException, status
 from motor.motor_asyncio import AsyncIOMotorDatabase
@@ -83,6 +83,52 @@ async def create_task(
 
 
 @router.get(
+    "/",
+    response_model=List[TaskResponse],
+    summary="Lister les tâches de son entreprise (filtrables par projet ou statut)"
+)
+async def list_tasks(
+    project_id: Optional[str] = None,
+    status_filter: Optional[TaskStatus] = None,
+    assigned_user_id: Optional[str] = None,
+    current_user: UserResponse = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_database)
+):
+    """
+    Retourne la liste des tâches de l'entreprise connectée.
+    Possibilité de filtrer par projet, statut ou utilisateur assigné.
+    """
+    company_oid = ObjectId(current_user.company_id)
+    query: dict = {
+        "company_id": {"$in": [company_oid, str(company_oid), str(current_user.company_id)]}
+    }
+
+    if project_id:
+        if not ObjectId.is_valid(project_id):
+            raise HTTPException(status_code=400, detail="Identifiant de projet invalide.")
+        project_oid = ObjectId(project_id)
+        query["project_id"] = {"$in": [project_oid, str(project_oid)]}
+
+    if status_filter:
+        query["status"] = status_filter.value
+
+    if assigned_user_id:
+        if not ObjectId.is_valid(assigned_user_id):
+            raise HTTPException(status_code=400, detail="Identifiant d'utilisateur invalide.")
+        query["assigned_user_id"] = assigned_user_id
+
+    cursor = db.tasks.find(query).sort("created_at", -1)
+    tasks: List[TaskResponse] = []
+    async for doc in cursor:
+        doc["_id"] = str(doc["_id"])
+        doc["project_id"] = str(doc["project_id"])
+        doc["company_id"] = str(doc["company_id"])
+        tasks.append(TaskResponse(**doc))
+
+    return tasks
+
+
+@router.get(
     "/kanban/{project_id}",
     response_model=KanbanBoardResponse,
     summary="Visualiser le tableau Kanban d'un projet (groupé par colonnes de statut)"
@@ -103,7 +149,10 @@ async def get_project_kanban(
     company_oid = ObjectId(current_user.company_id)
 
     # Vérification d'accès au projet
-    project = await db.projects.find_one({"_id": project_oid, "company_id": company_oid})
+    project = await db.projects.find_one({
+        "_id": project_oid,
+        "company_id": {"$in": [company_oid, str(company_oid), str(current_user.company_id)]}
+    })
     if not project:
         raise HTTPException(status_code=404, detail="Projet introuvable dans votre entreprise.")
 
@@ -116,8 +165,8 @@ async def get_project_kanban(
     }
 
     cursor = db.tasks.find({
-        "project_id": project_oid,
-        "company_id": company_oid
+        "project_id": {"$in": [project_oid, str(project_oid)]},
+        "company_id": {"$in": [company_oid, str(company_oid), str(current_user.company_id)]}
     }).sort("created_at", 1)
 
     async for doc in cursor:
@@ -132,6 +181,33 @@ async def get_project_kanban(
         project_id=str(project_oid),
         columns=columns
     )
+
+
+@router.get(
+    "/{task_id}",
+    response_model=TaskResponse,
+    summary="Consulter les détails d'une tâche"
+)
+async def get_task_by_id(
+    task_id: str,
+    current_user: UserResponse = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_database)
+):
+    """Recherche une tâche par son identifiant sous le filtre d'isolation logicielle multi-tenant."""
+    if not ObjectId.is_valid(task_id):
+        raise HTTPException(status_code=400, detail="Identifiant de tâche invalide.")
+
+    doc = await db.tasks.find_one({
+        "_id": ObjectId(task_id),
+        "company_id": ObjectId(current_user.company_id)
+    })
+    if not doc:
+        raise HTTPException(status_code=404, detail="Tâche introuvable au sein de votre entreprise.")
+
+    doc["_id"] = str(doc["_id"])
+    doc["project_id"] = str(doc["project_id"])
+    doc["company_id"] = str(doc["company_id"])
+    return TaskResponse(**doc)
 
 
 @router.put(
@@ -152,7 +228,7 @@ async def update_task(
     task_oid = ObjectId(task_id)
     company_oid = ObjectId(current_user.company_id)
 
-    update_data = {k: v for k, v in task_in.model_dump(exclude_unset=True).items() if v is not None}
+    update_data = {k: v for k, v in task_in.model_dump(mode="json", exclude_unset=True).items() if v is not None}
     if not update_data:
         raise HTTPException(status_code=400, detail="Aucun champ à mettre à jour.")
 

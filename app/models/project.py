@@ -5,19 +5,19 @@ from app.models.common import MongoBaseModel, PyObjectId
 
 
 class ProjectBase(MongoBaseModel):
-    name: str = Field(..., min_length=2, max_length=150, description="Nom du projet")
+    name: str = Field(..., min_length=1, max_length=150, description="Nom du projet")
     description: Optional[str] = Field(None, max_length=1000, description="Description du projet")
     member_ids: List[PyObjectId] = Field(default_factory=list, description="Liste des identifiants des utilisateurs membres du projet")
 
 
 class ProjectCreate(MongoBaseModel):
-    name: str = Field(..., min_length=2, max_length=150)
+    name: str = Field(..., min_length=1, max_length=150)
     description: Optional[str] = Field(None, max_length=1000)
     member_ids: List[PyObjectId] = Field(default_factory=list)
 
 
 class ProjectUpdate(MongoBaseModel):
-    name: Optional[str] = Field(None, min_length=2, max_length=150)
+    name: Optional[str] = Field(None, min_length=1, max_length=150)
     description: Optional[str] = Field(None, max_length=1000)
     member_ids: Optional[List[PyObjectId]] = None
 

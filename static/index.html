@@ -3,20 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FlowSaaS — Gestion de Projet Multi-Tenant</title>
+    <title>FlowSaaS — Plateforme SaaS de Gestion de Projet</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
                         brand: {
-                            50: '#eef2ff',
-                            100: '#e0e7ff',
-                            500: '#6366f1',
-                            600: '#4f46e5',
-                            700: '#4338ca',
+                            50: '#f5f3ff',
+                            100: '#ede9fe',
+                            200: '#ddd6fe',
+                            300: '#c4b5fd',
+                            400: '#a78bfa',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9',
+                            800: '#5b21b6',
+                            900: '#4c1d95',
                         }
                     }
                 }
@@ -24,39 +30,44 @@
         }
     </script>
     <link rel="stylesheet" href="/static/style.css">
-    <!-- FontAwesome icons -->
+    <!-- FontAwesome 6.5.1 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
-<body class="h-full text-slate-800 flex flex-col antialiased">
+<body class="h-full text-slate-800 dark:text-slate-100 dark:bg-slate-900 flex flex-col antialiased transition-colors duration-200">
 
-    <!-- TOAST CONTAINER -->
-    <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2.5 pointer-events-none"></div>
 
     <!-- ========================================== -->
     <!-- AUTHENTICATION SCREEN (LOGIN / REGISTER)  -->
     <!-- ========================================== -->
-    <div id="auth-screen" class="min-h-full flex flex-col justify-center py-12 sm:px-6 lg:px-8 bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white">
-        <div class="sm:mx-auto sm:w-full sm:max-w-md text-center">
-            <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-indigo-600 text-white shadow-xl shadow-indigo-500/30 mb-4">
-                <i class="fa-solid fa-layer-group text-2xl"></i>
+    <div id="auth-screen" class="min-h-full flex flex-col justify-center py-12 sm:px-6 lg:px-8 aurora-bg text-white relative overflow-hidden">
+        
+        <!-- Subtle background glow orbs -->
+        <div class="absolute -top-40 -left-40 w-96 h-96 bg-violet-600/20 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -bottom-40 -right-40 w-96 h-96 bg-cyan-600/20 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="sm:mx-auto sm:w-full sm:max-w-md text-center relative z-10">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-tr from-violet-600 to-indigo-500 text-white shadow-xl shadow-violet-600/30 mb-4 icon-hover-rotate">
+                <i class="fa-solid fa-layer-group text-3xl"></i>
             </div>
-            <h1 class="text-3xl font-extrabold tracking-tight">FlowSaaS</h1>
-            <p class="mt-2 text-sm text-slate-300">Plateforme SaaS de gestion de projet collaborative (Kanban)</p>
-            <div class="mt-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">
-                <i class="fa-solid fa-shield-halved mr-1.5"></i> Isolation multi-tenant stricte (MongoDB)
+            <h1 class="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-white via-violet-200 to-slate-200 bg-clip-text text-transparent">FlowSaaS</h1>
+            <p class="mt-2 text-sm text-slate-300">Plateforme SaaS collaborative et étanche en mode Multi-Tenant</p>
+            <div class="mt-3 inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-violet-500/20 text-violet-300 border border-violet-400/30 backdrop-blur-sm">
+                <i class="fa-solid fa-shield-halved mr-1.5 text-cyan-400"></i> Isolation stricte MongoDB 7.0 par <code class="ml-1 font-mono text-cyan-200">company_id</code>
             </div>
         </div>
 
-        <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-lg px-4 sm:px-0">
-            <div class="bg-white/10 backdrop-blur-md py-8 px-6 shadow-2xl rounded-2xl sm:px-10 border border-white/10 text-slate-100">
+        <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-lg px-4 sm:px-0 relative z-10">
+            <div class="glass-card py-8 px-6 rounded-2xl sm:px-10 text-slate-100">
                 
                 <!-- Auth Tabs -->
                 <div class="flex border-b border-white/10 pb-4 mb-6 gap-4">
-                    <button id="tab-login" onclick="showAuthTab('login')" class="flex-1 py-2 text-center font-semibold text-sm border-b-2 border-indigo-400 text-white transition">
-                        <i class="fa-solid fa-arrow-right-to-bracket mr-2"></i>Connexion
+                    <button id="tab-login" onclick="showAuthTab('login')" class="flex-1 py-2.5 text-center font-semibold text-sm border-b-2 border-violet-400 text-white transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-arrow-right-to-bracket text-xs"></i> Connexion
                     </button>
-                    <button id="tab-register" onclick="showAuthTab('register')" class="flex-1 py-2 text-center font-medium text-sm text-slate-400 border-b-2 border-transparent hover:text-white transition">
-                        <i class="fa-solid fa-building mr-2"></i>Nouvelle Entreprise
+                    <button id="tab-register" onclick="showAuthTab('register')" class="flex-1 py-2.5 text-center font-medium text-sm text-slate-400 border-b-2 border-transparent hover:text-white transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-building text-xs"></i> Nouvelle Entreprise
                     </button>
                 </div>
 
@@ -64,29 +75,38 @@
                 <form id="form-login" onsubmit="handleLogin(event)" class="space-y-4">
                     <div>
                         <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300">Email professionnel</label>
-                        <input type="email" id="login-email" required placeholder="alice@acme.com"
-                               class="mt-1 block w-full px-4 py-2.5 bg-slate-900/60 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm">
+                        <div class="relative mt-1">
+                            <i class="fa-solid fa-envelope absolute left-3.5 top-3.5 text-slate-400 text-xs"></i>
+                            <input type="email" id="login-email" required placeholder="alice@acme.com"
+                                   class="block w-full pl-10 pr-4 py-2.5 bg-slate-900/70 border border-slate-700/80 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent text-sm transition">
+                        </div>
                     </div>
                     <div>
                         <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300">Mot de passe</label>
-                        <input type="password" id="login-password" required placeholder="••••••••"
-                               class="mt-1 block w-full px-4 py-2.5 bg-slate-900/60 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm">
+                        <div class="relative mt-1">
+                            <i class="fa-solid fa-lock absolute left-3.5 top-3.5 text-slate-400 text-xs"></i>
+                            <input type="password" id="login-password" required placeholder="••••••••"
+                                   class="block w-full pl-10 pr-4 py-2.5 bg-slate-900/70 border border-slate-700/80 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent text-sm transition">
+                        </div>
                     </div>
-                    <button type="submit" class="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-xl shadow-lg shadow-indigo-600/30 transition text-sm">
-                        Accéder à l'espace de travail
+                    <button type="submit" class="w-full py-3 px-4 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-semibold rounded-xl shadow-lg shadow-violet-600/30 transition text-sm btn-press flex items-center justify-center gap-2">
+                        <span>Accéder à l'espace de travail</span>
+                        <i class="fa-solid fa-arrow-right text-xs"></i>
                     </button>
 
                     <!-- Quick filling helpers for demo -->
-                    <div class="pt-4 border-t border-white/10 text-xs text-slate-400">
-                        <p class="font-semibold text-slate-300 mb-2">Comptes de test (créés par le script de test) :</p>
-                        <div class="grid grid-cols-2 gap-2">
-                            <button type="button" onclick="fillLoginForm('alice@acme.com', 'Password123!')" class="p-2 rounded bg-slate-800/80 hover:bg-slate-800 border border-slate-700 text-left">
-                                <span class="font-medium text-indigo-300">🏢 Alice (Admin)</span><br>
-                                <span class="text-[11px] text-slate-400">Acme Corp</span>
+                    <div class="pt-5 border-t border-white/10 text-xs text-slate-400">
+                        <p class="font-semibold text-slate-300 mb-2.5 flex items-center gap-1.5">
+                            <i class="fa-solid fa-bolt text-amber-400"></i> Comptes de démonstration pré-configurés :
+                        </p>
+                        <div class="grid grid-cols-2 gap-2.5">
+                            <button type="button" onclick="fillLoginForm('alice@acme.com', 'Password123!')" class="p-2.5 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-700/80 text-left transition hover:border-violet-500/50">
+                                <span class="font-semibold text-violet-300 flex items-center gap-1.5"><i class="fa-solid fa-building text-[10px]"></i> Alice (Admin)</span>
+                                <span class="text-[11px] text-slate-400 block mt-0.5">Acme Corp</span>
                             </button>
-                            <button type="button" onclick="fillLoginForm('charlie@beta.com', 'Password123!')" class="p-2 rounded bg-slate-800/80 hover:bg-slate-800 border border-slate-700 text-left">
-                                <span class="font-medium text-purple-300">🏢 Charlie (Admin)</span><br>
-                                <span class="text-[11px] text-slate-400">Beta Inc</span>
+                            <button type="button" onclick="fillLoginForm('charlie@beta.com', 'Password123!')" class="p-2.5 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-700/80 text-left transition hover:border-cyan-500/50">
+                                <span class="font-semibold text-cyan-300 flex items-center gap-1.5"><i class="fa-solid fa-building text-[10px]"></i> Charlie (Admin)</span>
+                                <span class="text-[11px] text-slate-400 block mt-0.5">Beta Inc</span>
                             </button>
                         </div>
                     </div>
@@ -95,33 +115,33 @@
                 <!-- FORM 2: REGISTER COMPANY -->
                 <form id="form-register" onsubmit="handleRegisterCompany(event)" class="space-y-4 hidden">
                     <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300">Nom de votre entreprise</label>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300">Nom de votre entreprise *</label>
                         <input type="text" id="reg-company-name" required placeholder="ex: Wayne Enterprises"
-                               class="mt-1 block w-full px-4 py-2 bg-slate-900/60 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                               class="mt-1 block w-full px-4 py-2 bg-slate-900/70 border border-slate-700/80 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500 text-sm">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300">Description (optionnelle)</label>
                         <input type="text" id="reg-company-desc" placeholder="ex: Cabinet de conseil en transformation digitale"
-                               class="mt-1 block w-full px-4 py-2 bg-slate-900/60 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                               class="mt-1 block w-full px-4 py-2 bg-slate-900/70 border border-slate-700/80 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500 text-sm">
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300">Nom complet Admin</label>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300">Nom complet Admin *</label>
                             <input type="text" id="reg-admin-name" required placeholder="Bruce Wayne"
-                                   class="mt-1 block w-full px-4 py-2 bg-slate-900/60 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                                   class="mt-1 block w-full px-4 py-2 bg-slate-900/70 border border-slate-700/80 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500 text-sm">
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300">Email Administrateur</label>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300">Email Administrateur *</label>
                             <input type="email" id="reg-admin-email" required placeholder="bruce@wayne.com"
-                                   class="mt-1 block w-full px-4 py-2 bg-slate-900/60 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                                   class="mt-1 block w-full px-4 py-2 bg-slate-900/70 border border-slate-700/80 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500 text-sm">
                         </div>
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300">Mot de passe (min. 6 caractères)</label>
-                        <input type="password" id="reg-admin-password" required minlength="6" placeholder="••••••••"
-                               class="mt-1 block w-full px-4 py-2 bg-slate-900/60 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300">Mot de passe *</label>
+                        <input type="password" id="reg-admin-password" required placeholder="••••••••"
+                               class="mt-1 block w-full px-4 py-2 bg-slate-900/70 border border-slate-700/80 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500 text-sm">
                     </div>
-                    <button type="submit" class="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-xl shadow-lg shadow-indigo-600/30 transition text-sm">
+                    <button type="submit" class="w-full py-3 px-4 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-semibold rounded-xl shadow-lg shadow-violet-600/30 transition text-sm btn-press">
                         Créer l'organisation et se connecter
                     </button>
                 </form>
@@ -136,42 +156,76 @@
     <!-- ========================================== -->
     <div id="app-screen" class="flex-1 flex flex-col h-full overflow-hidden hidden">
 
-        <!-- TOP BAR -->
-        <header class="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between shadow-sm z-10">
+        <!-- TOP BAR / HEADER -->
+        <header class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-3 flex items-center justify-between shadow-sm z-20 transition-colors">
+            
+            <!-- Left: Company info & branding -->
             <div class="flex items-center space-x-4">
-                <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold shadow-md shadow-indigo-500/20">
-                    <i class="fa-solid fa-layer-group"></i>
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-violet-600 to-indigo-500 text-white flex items-center justify-center font-bold shadow-md shadow-violet-500/20">
+                    <i class="fa-solid fa-layer-group text-lg"></i>
                 </div>
                 <div>
                     <div class="flex items-center space-x-2">
-                        <span id="current-company-name" class="font-bold text-slate-900 text-base">Entreprise</span>
-                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-100 text-emerald-800">
+                        <span id="current-company-name" class="font-extrabold text-slate-900 dark:text-white text-base tracking-tight">Entreprise</span>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
                             <i class="fa-solid fa-check-circle mr-1 text-[9px]"></i> Tenant isolé
                         </span>
                     </div>
-                    <div class="text-xs text-slate-500" id="current-company-sub">ID: ...</div>
+                    <div class="text-xs text-slate-500 dark:text-slate-400 font-mono" id="current-company-sub">ID: ...</div>
                 </div>
             </div>
 
-            <!-- User Menu -->
-            <div class="flex items-center space-x-4">
-                <a href="/docs" target="_blank" class="text-xs text-slate-500 hover:text-indigo-600 flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-slate-100 transition">
-                    <i class="fa-solid fa-book-open"></i> Swagger API
+            <!-- Middle: Global Search Bar -->
+            <div class="flex items-center flex-1 max-w-md mx-4 sm:mx-8 relative">
+                <div class="relative w-full search-bar rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 flex items-center">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 text-slate-400 text-xs pointer-events-none"></i>
+                    <input type="text" id="global-search" oninput="handleGlobalSearch(this.value)" placeholder="Rechercher des projets, tâches..."
+                           class="w-full pl-9 pr-16 py-2 bg-transparent text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none">
+                    <button id="search-clear-btn" type="button" onclick="clearSearch()" title="Effacer la recherche" class="hidden absolute right-9 text-slate-400 hover:text-rose-500 transition p-1">
+                        <i class="fa-solid fa-circle-xmark text-xs"></i>
+                    </button>
+                    <kbd class="absolute right-2.5 px-1.5 py-0.5 text-[10px] font-semibold text-slate-400 bg-slate-200 dark:bg-slate-700 rounded border border-slate-300 dark:border-slate-600 pointer-events-none">⌘K</kbd>
+                </div>
+
+                <!-- Instant Search Dropdown Popover -->
+                <div id="search-dropdown" class="hidden absolute left-0 right-0 top-12 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl z-50 overflow-hidden max-h-96 overflow-y-auto">
+                    <!-- Populated dynamically with matching projects & tasks -->
+                </div>
+            </div>
+
+            <!-- Right: Dark Mode + Swagger + User Menu -->
+            <div class="flex items-center space-x-3">
+                
+                <!-- Dark Mode Toggle -->
+                <button id="btn-dark-mode" onclick="toggleDarkMode()" title="Basculer le thème clair/sombre"
+                        class="p-2 text-slate-500 dark:text-slate-400 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition dark-mode-btn">
+                    <i class="fa-solid fa-moon text-sm" id="dark-mode-icon"></i>
+                </button>
+
+                <!-- Swagger Link -->
+                <a href="/docs" target="_blank" class="hidden sm:flex text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-violet-600 dark:hover:text-violet-400 items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                    <i class="fa-solid fa-book-open"></i>
+                    <span>Swagger API</span>
                 </a>
-                <div class="h-5 w-px bg-slate-200"></div>
+                
+                <div class="h-5 w-px bg-slate-200 dark:bg-slate-700"></div>
+
+                <!-- User Badge -->
                 <div class="flex items-center space-x-3">
-                    <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-semibold text-xs border border-indigo-200" id="user-avatar">
+                    <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-violet-100 to-indigo-100 dark:from-violet-950 dark:to-indigo-950 text-violet-700 dark:text-violet-300 flex items-center justify-center font-bold text-xs border border-violet-200 dark:border-violet-800 shadow-sm" id="user-avatar">
                         U
                     </div>
                     <div class="text-left hidden sm:block">
-                        <div id="user-name" class="text-sm font-semibold text-slate-800 leading-tight">Utilisateur</div>
-                        <div class="flex items-center gap-1">
-                            <span id="user-role-badge" class="text-[10px] uppercase font-bold px-1.5 py-0.2 rounded bg-indigo-100 text-indigo-700">ADMIN</span>
-                            <span id="user-email" class="text-xs text-slate-400">user@example.com</span>
+                        <div id="user-name" class="text-sm font-semibold text-slate-800 dark:text-slate-200 leading-tight">Utilisateur</div>
+                        <div class="flex items-center gap-1.5 mt-0.5">
+                            <span id="user-role-badge" class="text-[10px] uppercase font-bold px-1.5 py-0.2 rounded bg-violet-100 text-violet-700 dark:bg-violet-900/50 dark:text-violet-300">ADMIN</span>
+                            <span id="user-email" class="text-xs text-slate-400 truncate max-w-[130px]">user@example.com</span>
                         </div>
                     </div>
                 </div>
-                <button onclick="handleLogout()" title="Se déconnecter" class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition">
+
+                <!-- Logout Button -->
+                <button onclick="handleLogout()" title="Se déconnecter" class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 rounded-xl transition btn-press">
                     <i class="fa-solid fa-arrow-right-from-bracket"></i>
                 </button>
             </div>
@@ -181,48 +235,161 @@
         <div class="flex-1 flex overflow-hidden">
             
             <!-- SIDEBAR -->
-            <aside class="w-64 bg-slate-900 text-slate-300 flex flex-col justify-between p-4 flex-shrink-0">
-                <nav class="space-y-1.5">
-                    <div class="px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">Navigation</div>
+            <aside class="w-64 sidebar-gradient text-slate-300 flex flex-col justify-between p-4 flex-shrink-0 relative noise-overlay border-r border-slate-800">
+                <nav class="space-y-1.5 relative z-10">
+                    <div class="px-3 py-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Navigation</div>
                     
-                    <button onclick="navigateView('projects')" id="nav-projects" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition bg-indigo-600 text-white">
+                    <!-- NEW DASHBOARD NAV -->
+                    <button onclick="navigateView('dashboard')" id="nav-dashboard" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition text-slate-400 hover:text-white hover:bg-slate-800/80 btn-press">
+                        <i class="fa-solid fa-chart-pie w-4 text-center"></i>
+                        <span>Tableau de bord</span>
+                    </button>
+
+                    <button onclick="navigateView('projects')" id="nav-projects" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition text-slate-400 hover:text-white hover:bg-slate-800/80 btn-press">
                         <i class="fa-solid fa-folder-kanban w-4 text-center"></i>
                         <span>Projets</span>
                     </button>
 
-                    <button onclick="navigateView('team')" id="nav-team" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition text-slate-400 hover:text-white hover:bg-slate-800">
+                    <button onclick="navigateView('team')" id="nav-team" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition text-slate-400 hover:text-white hover:bg-slate-800/80 btn-press">
                         <i class="fa-solid fa-users w-4 text-center"></i>
                         <span>Équipe & Membres</span>
                     </button>
 
-                    <button onclick="navigateView('settings')" id="nav-settings" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition text-slate-400 hover:text-white hover:bg-slate-800">
+                    <button onclick="navigateView('settings')" id="nav-settings" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition text-slate-400 hover:text-white hover:bg-slate-800/80 btn-press">
                         <i class="fa-solid fa-sliders w-4 text-center"></i>
                         <span>Entreprise</span>
                     </button>
                 </nav>
 
-                <!-- Database status widget in sidebar -->
-                <div class="p-3 bg-slate-800/80 rounded-xl border border-slate-700/60 text-xs">
-                    <div class="flex items-center justify-between text-slate-400 mb-1">
-                        <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> MongoDB 7.0</span>
-                        <span class="text-[10px] text-slate-500">Async Motor</span>
+                <!-- Sidebar Footer Widgets -->
+                <div class="space-y-3 relative z-10">
+                    <!-- Database status widget -->
+                    <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800 text-xs shadow-inner">
+                        <div class="flex items-center justify-between text-slate-400 mb-1.5">
+                            <span class="flex items-center gap-1.5 font-medium"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> MongoDB 7.0</span>
+                            <span class="text-[10px] text-violet-400 font-semibold uppercase">Async Motor</span>
+                        </div>
+                        <div class="text-[11px] text-slate-400 truncate">DB : <span class="text-slate-200 font-mono font-semibold" id="sidebar-db-name">saas_pm_db</span></div>
                     </div>
-                    <div class="text-[11px] text-slate-400 truncate">DB : <span class="text-slate-200 font-mono" id="sidebar-db-name">saas_pm_db</span></div>
+
+                    <!-- App version info -->
+                    <div class="px-2 text-[11px] text-slate-500 flex items-center justify-between">
+                        <span>FlowSaaS v2.0</span>
+                        <span class="font-mono text-[10px]">Multi-Tenant</span>
+                    </div>
                 </div>
             </aside>
 
             <!-- MAIN CONTENT AREA -->
-            <main class="flex-1 bg-slate-100 overflow-y-auto p-6 flex flex-col">
+            <main class="flex-1 bg-slate-100 dark:bg-slate-950 overflow-y-auto p-6 lg:p-8 flex flex-col transition-colors">
                 
-                <!-- VIEW 1: PROJECTS LIST -->
-                <div id="view-projects" class="space-y-6">
+                <!-- ========================================== -->
+                <!-- VIEW 0: DASHBOARD (NEW FEATURE)            -->
+                <!-- ========================================== -->
+                <div id="view-dashboard" class="space-y-6 view-transition">
+                    <!-- Welcome Hero Banner -->
+                    <div class="bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 rounded-3xl p-6 lg:p-8 text-white shadow-xl shadow-violet-600/10 relative overflow-hidden">
+                        <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+                        <div class="relative z-10">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-white/15 backdrop-blur-sm border border-white/20 mb-3" id="dashboard-date">
+                                <i class="fa-regular fa-calendar mr-1.5"></i> Aujourd'hui
+                            </span>
+                            <h2 class="text-3xl font-extrabold tracking-tight" id="dashboard-welcome">Bonjour !</h2>
+                            <p class="mt-1 text-sm text-violet-100 max-w-xl">Bienvenue sur votre espace FlowSaaS. Voici un aperçu en temps réel de vos projets collaboratifs et de l'avancement de vos équipes.</p>
+                        </div>
+                    </div>
+
+                    <!-- 4 KPI Stat Cards Grid -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                        <!-- Stat 1: Projets -->
+                        <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm card-lift stat-card-violet">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Projets Actifs</span>
+                                <div class="w-10 h-10 rounded-xl bg-violet-100 dark:bg-violet-950/60 text-violet-600 dark:text-violet-400 flex items-center justify-center text-sm font-bold">
+                                    <i class="fa-solid fa-folder-kanban"></i>
+                                </div>
+                            </div>
+                            <div class="mt-3 flex items-baseline gap-2">
+                                <span id="stat-projects" class="text-3xl font-extrabold text-slate-900 dark:text-white">0</span>
+                                <span class="text-xs text-violet-600 dark:text-violet-400 font-semibold">espaces</span>
+                            </div>
+                            <p class="mt-1 text-[11px] text-slate-400">Projets gérés dans votre tenant</p>
+                        </div>
+
+                        <!-- Stat 2: Tâches totales -->
+                        <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm card-lift stat-card-cyan">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Tâches Totales</span>
+                                <div class="w-10 h-10 rounded-xl bg-cyan-100 dark:bg-cyan-950/60 text-cyan-600 dark:text-cyan-400 flex items-center justify-center text-sm font-bold">
+                                    <i class="fa-solid fa-list-check"></i>
+                                </div>
+                            </div>
+                            <div class="mt-3 flex items-baseline gap-2">
+                                <span id="stat-tasks-total" class="text-3xl font-extrabold text-slate-900 dark:text-white">0</span>
+                                <span class="text-xs text-cyan-600 dark:text-cyan-400 font-semibold">cartes Kanban</span>
+                            </div>
+                            <p class="mt-1 text-[11px] text-slate-400">Réparties sur tous les tableaux</p>
+                        </div>
+
+                        <!-- Stat 3: Tâches terminées -->
+                        <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm card-lift stat-card-emerald">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Tâches Terminées</span>
+                                <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-sm font-bold">
+                                    <i class="fa-solid fa-circle-check"></i>
+                                </div>
+                            </div>
+                            <div class="mt-3 flex items-baseline gap-2">
+                                <span id="stat-tasks-done" class="text-3xl font-extrabold text-slate-900 dark:text-white">0</span>
+                                <span id="stat-tasks-done-pct" class="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">0%</span>
+                            </div>
+                            <p class="mt-1 text-[11px] text-slate-400">Statut "Terminé (DONE)"</p>
+                        </div>
+
+                        <!-- Stat 4: Membres -->
+                        <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm card-lift stat-card-amber">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Collaborateurs</span>
+                                <div class="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center text-sm font-bold">
+                                    <i class="fa-solid fa-users"></i>
+                                </div>
+                            </div>
+                            <div class="mt-3 flex items-baseline gap-2">
+                                <span id="stat-members" class="text-3xl font-extrabold text-slate-900 dark:text-white">0</span>
+                                <span class="text-xs text-amber-600 dark:text-amber-400 font-semibold">membres</span>
+                            </div>
+                            <p class="mt-1 text-[11px] text-slate-400">Rattachés à votre organisation</p>
+                        </div>
+                    </div>
+
+                    <!-- Recent Tasks Section -->
+                    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
+                        <div class="flex items-center justify-between mb-4">
+                            <div>
+                                <h3 class="text-base font-bold text-slate-900 dark:text-white">Dernières tâches créées</h3>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">Les 5 activités récentes sur l'ensemble de vos projets.</p>
+                            </div>
+                            <button onclick="navigateView('projects')" class="text-xs font-semibold text-violet-600 dark:text-violet-400 hover:underline flex items-center gap-1">
+                                Voir tous les projets <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                            </button>
+                        </div>
+                        <div id="dashboard-recent-tasks" class="space-y-3">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========================================== -->
+                <!-- VIEW 1: PROJECTS LIST                      -->
+                <!-- ========================================== -->
+                <div id="view-projects" class="space-y-6 view-transition hidden">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div>
-                            <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Projets de l'entreprise</h2>
-                            <p class="text-sm text-slate-500">Espaces de travail collaboratifs étanches à votre organisation.</p>
+                            <h2 class="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">Projets de l'entreprise</h2>
+                            <p class="text-sm text-slate-500 dark:text-slate-400">Espaces de travail collaboratifs étanches et isolés pour votre organisation.</p>
                         </div>
-                        <button onclick="openCreateProjectModal()" class="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl shadow-sm transition text-sm">
-                            <i class="fa-solid fa-plus"></i> Nouveau projet
+                        <button onclick="openCreateProjectModal()" class="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-semibold rounded-xl shadow-sm transition text-sm btn-press">
+                            <i class="fa-solid fa-plus text-xs"></i> Nouveau projet
                         </button>
                     </div>
 
@@ -232,26 +399,30 @@
                     </div>
                 </div>
 
-                <!-- VIEW 2: KANBAN BOARD -->
-                <div id="view-kanban" class="flex-1 flex flex-col space-y-4 hidden">
+                <!-- ========================================== -->
+                <!-- VIEW 2: KANBAN BOARD                       -->
+                <!-- ========================================== -->
+                <div id="view-kanban" class="flex-1 flex flex-col space-y-4 view-transition hidden">
                     <!-- Project Kanban Header -->
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-slate-200">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-slate-200 dark:border-slate-800">
                         <div class="flex items-center space-x-3">
-                            <button onclick="navigateView('projects')" class="p-2 rounded-lg bg-white border border-slate-200 text-slate-600 hover:text-indigo-600 hover:bg-slate-50 transition text-sm">
+                            <button onclick="navigateView('projects')" class="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:text-violet-600 hover:bg-slate-50 dark:hover:bg-slate-800 transition text-sm btn-press">
                                 <i class="fa-solid fa-arrow-left"></i>
                             </button>
                             <div>
                                 <div class="flex items-center gap-2">
-                                    <h2 id="kanban-project-title" class="text-xl font-bold text-slate-900">Projet</h2>
-                                    <span class="px-2 py-0.5 rounded text-xs bg-indigo-100 text-indigo-700 font-medium">Kanban</span>
+                                    <h2 id="kanban-project-title" class="text-xl font-extrabold text-slate-900 dark:text-white">Projet</h2>
+                                    <span class="px-2.5 py-0.5 rounded-full text-xs bg-violet-100 text-violet-700 dark:bg-violet-950 dark:text-violet-300 font-semibold border border-violet-200 dark:border-violet-800">
+                                        <i class="fa-solid fa-table-columns mr-1"></i> Kanban
+                                    </span>
                                 </div>
-                                <p id="kanban-project-desc" class="text-xs text-slate-500">Description du projet</p>
+                                <p id="kanban-project-desc" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Description du projet</p>
                             </div>
                         </div>
 
                         <div class="flex items-center gap-3">
-                            <button onclick="openCreateTaskModal()" class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl shadow-sm transition text-sm">
-                                <i class="fa-solid fa-plus"></i> Ajouter une tâche
+                            <button onclick="openCreateTaskModal()" class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-semibold rounded-xl shadow-sm transition text-sm btn-press">
+                                <i class="fa-solid fa-plus text-xs"></i> Ajouter une tâche
                             </button>
                         </div>
                     </div>
@@ -260,53 +431,53 @@
                     <div class="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-start overflow-x-auto pb-4">
                         
                         <!-- COLUMN 1: TODO -->
-                        <div class="kanban-col bg-slate-200/70 rounded-2xl p-3.5 border border-slate-300/60 flex flex-col"
+                        <div class="kanban-col bg-slate-200/60 dark:bg-slate-900/60 rounded-2xl p-4 border border-slate-300/60 dark:border-slate-800 flex flex-col transition-colors"
                              ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 'TODO')">
                             <div class="flex items-center justify-between mb-3 px-1">
                                 <div class="flex items-center gap-2">
                                     <span class="w-3 h-3 rounded-full bg-slate-400"></span>
-                                    <h3 class="font-bold text-xs uppercase tracking-wider text-slate-700">À faire</h3>
+                                    <h3 class="font-extrabold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300">À faire</h3>
                                 </div>
-                                <span id="count-TODO" class="px-2 py-0.5 rounded-full text-xs font-bold bg-white text-slate-600 shadow-sm">0</span>
+                                <span id="count-TODO" class="px-2 py-0.5 rounded-full text-xs font-bold bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 shadow-sm border border-slate-200 dark:border-slate-700">0</span>
                             </div>
                             <div id="col-TODO" class="space-y-3 flex-1 overflow-y-auto"></div>
                         </div>
 
                         <!-- COLUMN 2: IN_PROGRESS -->
-                        <div class="kanban-col bg-amber-50/60 rounded-2xl p-3.5 border border-amber-200/80 flex flex-col"
+                        <div class="kanban-col bg-amber-50/60 dark:bg-amber-950/20 rounded-2xl p-4 border border-amber-200/80 dark:border-amber-900/40 flex flex-col transition-colors"
                              ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 'IN_PROGRESS')">
                             <div class="flex items-center justify-between mb-3 px-1">
                                 <div class="flex items-center gap-2">
                                     <span class="w-3 h-3 rounded-full bg-amber-500"></span>
-                                    <h3 class="font-bold text-xs uppercase tracking-wider text-amber-900">En cours</h3>
+                                    <h3 class="font-extrabold text-xs uppercase tracking-wider text-amber-900 dark:text-amber-300">En cours</h3>
                                 </div>
-                                <span id="count-IN_PROGRESS" class="px-2 py-0.5 rounded-full text-xs font-bold bg-white text-amber-800 shadow-sm">0</span>
+                                <span id="count-IN_PROGRESS" class="px-2 py-0.5 rounded-full text-xs font-bold bg-white dark:bg-slate-800 text-amber-800 dark:text-amber-300 shadow-sm border border-amber-200 dark:border-amber-800">0</span>
                             </div>
                             <div id="col-IN_PROGRESS" class="space-y-3 flex-1 overflow-y-auto"></div>
                         </div>
 
                         <!-- COLUMN 3: REVIEW -->
-                        <div class="kanban-col bg-purple-50/60 rounded-2xl p-3.5 border border-purple-200/80 flex flex-col"
+                        <div class="kanban-col bg-purple-50/60 dark:bg-purple-950/20 rounded-2xl p-4 border border-purple-200/80 dark:border-purple-900/40 flex flex-col transition-colors"
                              ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 'REVIEW')">
                             <div class="flex items-center justify-between mb-3 px-1">
                                 <div class="flex items-center gap-2">
                                     <span class="w-3 h-3 rounded-full bg-purple-500"></span>
-                                    <h3 class="font-bold text-xs uppercase tracking-wider text-purple-900">En revue</h3>
+                                    <h3 class="font-extrabold text-xs uppercase tracking-wider text-purple-900 dark:text-purple-300">En revue</h3>
                                 </div>
-                                <span id="count-REVIEW" class="px-2 py-0.5 rounded-full text-xs font-bold bg-white text-purple-800 shadow-sm">0</span>
+                                <span id="count-REVIEW" class="px-2 py-0.5 rounded-full text-xs font-bold bg-white dark:bg-slate-800 text-purple-800 dark:text-purple-300 shadow-sm border border-purple-200 dark:border-purple-800">0</span>
                             </div>
                             <div id="col-REVIEW" class="space-y-3 flex-1 overflow-y-auto"></div>
                         </div>
 
                         <!-- COLUMN 4: DONE -->
-                        <div class="kanban-col bg-emerald-50/60 rounded-2xl p-3.5 border border-emerald-200/80 flex flex-col"
+                        <div class="kanban-col bg-emerald-50/60 dark:bg-emerald-950/20 rounded-2xl p-4 border border-emerald-200/80 dark:border-emerald-900/40 flex flex-col transition-colors"
                              ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 'DONE')">
                             <div class="flex items-center justify-between mb-3 px-1">
                                 <div class="flex items-center gap-2">
                                     <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
-                                    <h3 class="font-bold text-xs uppercase tracking-wider text-emerald-900">Terminé</h3>
+                                    <h3 class="font-extrabold text-xs uppercase tracking-wider text-emerald-900 dark:text-emerald-300">Terminé</h3>
                                 </div>
-                                <span id="count-DONE" class="px-2 py-0.5 rounded-full text-xs font-bold bg-white text-emerald-800 shadow-sm">0</span>
+                                <span id="count-DONE" class="px-2 py-0.5 rounded-full text-xs font-bold bg-white dark:bg-slate-800 text-emerald-800 dark:text-emerald-300 shadow-sm border border-emerald-200 dark:border-emerald-800">0</span>
                             </div>
                             <div id="col-DONE" class="space-y-3 flex-1 overflow-y-auto"></div>
                         </div>
@@ -314,70 +485,78 @@
                     </div>
                 </div>
 
-                <!-- VIEW 3: TEAM / USERS -->
-                <div id="view-team" class="space-y-6 hidden">
+                <!-- ========================================== -->
+                <!-- VIEW 3: TEAM / USERS                       -->
+                <!-- ========================================== -->
+                <div id="view-team" class="space-y-6 view-transition hidden">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div>
-                            <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Collaborateurs & Équipe</h2>
-                            <p class="text-sm text-slate-500">Membres rattachés à votre entreprise cliente (scellés par le <code class="text-xs bg-slate-200 px-1 py-0.5 rounded font-mono">company_id</code>).</p>
+                            <h2 class="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">Collaborateurs & Équipe</h2>
+                            <p class="text-sm text-slate-500 dark:text-slate-400">Membres rattachés à votre entreprise cliente (scellés par le <code class="text-xs bg-slate-200 dark:bg-slate-800 px-1.5 py-0.5 rounded font-mono">company_id</code>).</p>
                         </div>
-                        <button id="btn-invite-user" onclick="openCreateUserModal()" class="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl shadow-sm transition text-sm">
-                            <i class="fa-solid fa-user-plus"></i> Ajouter un collaborateur
+                        <button id="btn-invite-user" onclick="openCreateUserModal()" class="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-semibold rounded-xl shadow-sm transition text-sm btn-press">
+                            <i class="fa-solid fa-user-plus text-xs"></i> Ajouter un collaborateur
                         </button>
                     </div>
 
-                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                        <table class="min-w-full divide-y divide-slate-200 text-sm">
-                            <thead class="bg-slate-50 text-slate-500 uppercase font-semibold text-xs">
+                    <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+                        <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-800 text-sm">
+                            <thead class="bg-slate-50 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 uppercase font-bold text-[11px] tracking-wider">
                                 <tr>
-                                    <th class="px-6 py-3.5 text-left">Collaborateur</th>
-                                    <th class="px-6 py-3.5 text-left">Rôle</th>
-                                    <th class="px-6 py-3.5 text-left">Statut</th>
-                                    <th class="px-6 py-3.5 text-left">Date d'ajout</th>
-                                    <th class="px-6 py-3.5 text-right">Actions</th>
+                                    <th class="px-6 py-4 text-left">Collaborateur</th>
+                                    <th class="px-6 py-4 text-left">Rôle</th>
+                                    <th class="px-6 py-4 text-left">Statut</th>
+                                    <th class="px-6 py-4 text-left">Date d'ajout</th>
+                                    <th class="px-6 py-4 text-right">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody id="users-table-body" class="divide-y divide-slate-100 text-slate-700">
+                            <tbody id="users-table-body" class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
                                 <!-- Loaded dynamically -->
                             </tbody>
                         </table>
                     </div>
                 </div>
 
-                <!-- VIEW 4: COMPANY SETTINGS -->
-                <div id="view-settings" class="max-w-3xl space-y-6 hidden">
+                <!-- ========================================== -->
+                <!-- VIEW 4: COMPANY SETTINGS                   -->
+                <!-- ========================================== -->
+                <div id="view-settings" class="max-w-3xl space-y-6 view-transition hidden">
                     <div>
-                        <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Paramètres de l'entreprise</h2>
-                        <p class="text-sm text-slate-500">Gestion des informations relatives à votre organisation cliente SaaS.</p>
+                        <h2 class="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">Paramètres de l'entreprise</h2>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Gestion des informations relatives à votre organisation cliente SaaS.</p>
                     </div>
 
-                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-6">
+                    <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 space-y-6">
                         <form id="form-update-company" onsubmit="handleUpdateCompany(event)" class="space-y-4">
                             <div>
-                                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500">Nom de l'entreprise</label>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Nom de l'entreprise</label>
                                 <input type="text" id="settings-company-name" required
-                                       class="mt-1 block w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-800 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                       class="mt-1 block w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-800 dark:text-white text-sm focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-violet-500">
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500">Description</label>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Description</label>
                                 <textarea id="settings-company-desc" rows="3"
-                                          class="mt-1 block w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-800 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                                          class="mt-1 block w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-800 dark:text-white text-sm focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-violet-500"></textarea>
                             </div>
-                            <div id="settings-company-meta" class="text-xs text-slate-400 pt-2 border-t border-slate-100">
-                                Identifiant Tenant : <span class="font-mono text-slate-600" id="settings-company-id">...</span>
+                            <div id="settings-company-meta" class="text-xs text-slate-400 dark:text-slate-500 pt-3 border-t border-slate-100 dark:border-slate-800">
+                                Identifiant Tenant : <span class="font-mono text-slate-600 dark:text-slate-300 font-semibold" id="settings-company-id">...</span>
                             </div>
-                            <button type="submit" id="btn-save-company" class="py-2.5 px-5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl text-sm transition">
+                            <button type="submit" id="btn-save-company" class="py-2.5 px-5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-semibold rounded-xl text-sm transition shadow-sm btn-press">
                                 Enregistrer les modifications
                             </button>
                         </form>
                     </div>
 
                     <!-- Danger Zone -->
-                    <div class="bg-rose-50/70 border border-rose-200 rounded-2xl p-6">
-                        <h3 class="text-sm font-bold text-rose-900 uppercase tracking-wider mb-1">Zone de danger</h3>
-                        <p class="text-xs text-rose-700 mb-4">La suppression de votre entreprise entraînera la suppression immédiate et en cascade de l'ensemble des projets, tâches Kanban et utilisateurs associés.</p>
-                        <button onclick="handleDeleteCompany()" class="py-2.5 px-4 bg-rose-600 hover:bg-rose-700 text-white font-medium rounded-xl text-xs transition">
-                            <i class="fa-solid fa-trash mr-1.5"></i> Supprimer définitivement l'entreprise
+                    <div class="bg-rose-50/70 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/60 rounded-2xl p-6">
+                        <h3 class="text-sm font-bold text-rose-900 dark:text-rose-300 uppercase tracking-wider mb-1 flex items-center gap-2">
+                            <i class="fa-solid fa-triangle-exclamation"></i> Zone de danger
+                        </h3>
+                        <p class="text-xs text-rose-700 dark:text-rose-400 mb-4 leading-relaxed">
+                            La suppression de votre entreprise entraînera la suppression immédiate et en cascade de l'ensemble des projets, tâches Kanban et utilisateurs associés. Cette action est irréversible.
+                        </p>
+                        <button onclick="handleDeleteCompany()" class="py-2.5 px-4 bg-rose-600 hover:bg-rose-700 text-white font-semibold rounded-xl text-xs transition shadow-sm btn-press flex items-center gap-1.5">
+                            <i class="fa-solid fa-trash"></i> Supprimer définitivement l'entreprise
                         </button>
                     </div>
                 </div>
@@ -392,59 +571,69 @@
     <!-- ========================================== -->
 
     <!-- MODAL 1: CREATE PROJECT -->
-    <div id="modal-project" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm hidden modal-backdrop">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 modal-content border border-slate-200">
-            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-                <h3 class="font-bold text-lg text-slate-900">Créer un nouveau projet</h3>
-                <button onclick="closeModal('modal-project')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+    <div id="modal-project" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm hidden modal-backdrop">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl max-w-lg w-full p-6 modal-content border border-slate-200 dark:border-slate-800">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-violet-100 dark:bg-violet-950 text-violet-600 dark:text-violet-400 flex items-center justify-center text-xs font-bold">
+                        <i class="fa-solid fa-folder-plus"></i>
+                    </div>
+                    <h3 class="font-extrabold text-lg text-slate-900 dark:text-white">Créer un nouveau projet</h3>
+                </div>
+                <button onclick="closeModal('modal-project')" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <form onsubmit="handleCreateProject(event)" class="mt-4 space-y-4">
                 <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600">Nom du projet *</label>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">Nom du projet *</label>
                     <input type="text" id="proj-name" required placeholder="ex: Refonte Site E-commerce"
-                           class="mt-1 block w-full px-4 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                           class="mt-1 block w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 text-slate-800 dark:text-white">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600">Description</label>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">Description</label>
                     <textarea id="proj-desc" rows="3" placeholder="Objectifs et jalons du projet..."
-                              class="mt-1 block w-full px-4 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                              class="mt-1 block w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 text-slate-800 dark:text-white"></textarea>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">Membres affectés au projet</label>
-                    <div id="proj-members-select" class="max-h-36 overflow-y-auto border border-slate-200 rounded-xl p-2 space-y-1 bg-slate-50 text-xs">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1.5">Membres affectés au projet</label>
+                    <div id="proj-members-select" class="max-h-36 overflow-y-auto border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 space-y-1 bg-slate-50 dark:bg-slate-800 text-xs">
                         <!-- Loaded dynamically -->
                     </div>
                 </div>
-                <div class="pt-3 flex justify-end gap-2 border-t border-slate-100">
-                    <button type="button" onclick="closeModal('modal-project')" class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 text-sm font-medium">Annuler</button>
-                    <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-medium">Créer le projet</button>
+                <div class="pt-3 flex justify-end gap-2.5 border-t border-slate-100 dark:border-slate-800">
+                    <button type="button" onclick="closeModal('modal-project')" class="px-4 py-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-sm font-semibold transition">Annuler</button>
+                    <button type="submit" class="px-4 py-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white rounded-xl text-sm font-semibold transition shadow-sm btn-press">Créer le projet</button>
                 </div>
             </form>
         </div>
     </div>
 
     <!-- MODAL 2: CREATE TASK -->
-    <div id="modal-task" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm hidden modal-backdrop">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 modal-content border border-slate-200">
-            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-                <h3 class="font-bold text-lg text-slate-900">Ajouter une tâche Kanban</h3>
-                <button onclick="closeModal('modal-task')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+    <div id="modal-task" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm hidden modal-backdrop">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl max-w-lg w-full p-6 modal-content border border-slate-200 dark:border-slate-800">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-violet-100 dark:bg-violet-950 text-violet-600 dark:text-violet-400 flex items-center justify-center text-xs font-bold">
+                        <i class="fa-solid fa-list-check"></i>
+                    </div>
+                    <h3 class="font-extrabold text-lg text-slate-900 dark:text-white">Ajouter une tâche Kanban</h3>
+                </div>
+                <button onclick="closeModal('modal-task')" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <form onsubmit="handleCreateTask(event)" class="mt-4 space-y-4">
                 <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600">Titre de la tâche *</label>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">Titre de la tâche *</label>
                     <input type="text" id="task-title" required placeholder="ex: Intégrer la maquette de la page d'accueil"
-                           class="mt-1 block w-full px-4 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                           class="mt-1 block w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 text-slate-800 dark:text-white">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600">Description</label>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">Description</label>
                     <textarea id="task-desc" rows="3" placeholder="Détails, spécifications..."
-                              class="mt-1 block w-full px-4 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                              class="mt-1 block w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 text-slate-800 dark:text-white"></textarea>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600">Colonne initiale</label>
-                        <select id="task-status" class="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-xl text-sm bg-white">
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">Colonne initiale</label>
+                        <select id="task-status" class="mt-1 block w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-white">
                             <option value="TODO">À faire (TODO)</option>
                             <option value="IN_PROGRESS">En cours</option>
                             <option value="REVIEW">En revue</option>
@@ -452,8 +641,8 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600">Priorité</label>
-                        <select id="task-priority" class="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-xl text-sm bg-white">
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">Priorité</label>
+                        <select id="task-priority" class="mt-1 block w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-white">
                             <option value="LOW">Basse</option>
                             <option value="MEDIUM" selected>Moyenne</option>
                             <option value="HIGH">Haute</option>
@@ -462,54 +651,59 @@
                     </div>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600">Attribuer à un collaborateur</label>
-                    <select id="task-assigned-user" class="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-xl text-sm bg-white">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">Attribuer à un collaborateur</label>
+                    <select id="task-assigned-user" class="mt-1 block w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-white">
                         <option value="">-- Non attribuée --</option>
                         <!-- Loaded dynamically -->
                     </select>
                 </div>
-                <div class="pt-3 flex justify-end gap-2 border-t border-slate-100">
-                    <button type="button" onclick="closeModal('modal-task')" class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 text-sm font-medium">Annuler</button>
-                    <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-medium">Créer la tâche</button>
+                <div class="pt-3 flex justify-end gap-2.5 border-t border-slate-100 dark:border-slate-800">
+                    <button type="button" onclick="closeModal('modal-task')" class="px-4 py-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-sm font-semibold transition">Annuler</button>
+                    <button type="submit" class="px-4 py-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white rounded-xl text-sm font-semibold transition shadow-sm btn-press">Créer la tâche</button>
                 </div>
             </form>
         </div>
     </div>
 
     <!-- MODAL 3: CREATE USER -->
-    <div id="modal-user" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm hidden modal-backdrop">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 modal-content border border-slate-200">
-            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-                <h3 class="font-bold text-lg text-slate-900">Ajouter un collaborateur</h3>
-                <button onclick="closeModal('modal-user')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+    <div id="modal-user" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm hidden modal-backdrop">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl max-w-lg w-full p-6 modal-content border border-slate-200 dark:border-slate-800">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-violet-100 dark:bg-violet-950 text-violet-600 dark:text-violet-400 flex items-center justify-center text-xs font-bold">
+                        <i class="fa-solid fa-user-plus"></i>
+                    </div>
+                    <h3 class="font-extrabold text-lg text-slate-900 dark:text-white">Ajouter un collaborateur</h3>
+                </div>
+                <button onclick="closeModal('modal-user')" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <p class="text-xs text-slate-500 mt-1">Le collaborateur sera automatiquement scellé dans votre organisation cliente.</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-2">Le collaborateur sera automatiquement scellé dans votre organisation cliente.</p>
             <form onsubmit="handleCreateUser(event)" class="mt-4 space-y-4">
                 <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600">Nom complet *</label>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">Nom complet *</label>
                     <input type="text" id="newuser-name" required placeholder="Bob Martin"
-                           class="mt-1 block w-full px-4 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                           class="mt-1 block w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 text-slate-800 dark:text-white">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600">Email professionnel *</label>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">Email professionnel *</label>
                     <input type="email" id="newuser-email" required placeholder="bob@acme.com"
-                           class="mt-1 block w-full px-4 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                           class="mt-1 block w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 text-slate-800 dark:text-white">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600">Mot de passe temporaire *</label>
-                    <input type="password" id="newuser-password" required minlength="6" placeholder="••••••••"
-                           class="mt-1 block w-full px-4 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">Mot de passe temporaire *</label>
+                    <input type="password" id="newuser-password" required placeholder="••••••••"
+                           class="mt-1 block w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 text-slate-800 dark:text-white">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600">Rôle dans l'entreprise</label>
-                    <select id="newuser-role" class="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-xl text-sm bg-white">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">Rôle dans l'entreprise</label>
+                    <select id="newuser-role" class="mt-1 block w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-white">
                         <option value="member" selected>Membre (Collaborateur)</option>
                         <option value="admin">Administrateur</option>
                     </select>
                 </div>
-                <div class="pt-3 flex justify-end gap-2 border-t border-slate-100">
-                    <button type="button" onclick="closeModal('modal-user')" class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 text-sm font-medium">Annuler</button>
-                    <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-medium">Créer le compte</button>
+                <div class="pt-3 flex justify-end gap-2.5 border-t border-slate-100 dark:border-slate-800">
+                    <button type="button" onclick="closeModal('modal-user')" class="px-4 py-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-sm font-semibold transition">Annuler</button>
+                    <button type="submit" class="px-4 py-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white rounded-xl text-sm font-semibold transition shadow-sm btn-press">Créer le compte</button>
                 </div>
             </form>
         </div>
