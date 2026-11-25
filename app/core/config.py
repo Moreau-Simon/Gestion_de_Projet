@@ -13,10 +13,10 @@ class Settings(BaseSettings):
 
     # Configuration MongoDB
     # Le format URI standard permet de pointer vers :
-    # - un conteneur unique (ex: mongodb://mongodb:27017)
+    # - le routeur mongos du compose distribué (ex: mongodb://mongos:27017)
     # - un Replica Set (ex: mongodb://mongo1:27017,mongo2:27017/?replicaSet=rs0)
     # - un routeur de Sharding (ex: mongodb://mongos1:27017,mongos2:27017)
-    MONGO_URI: str = "mongodb://mongodb:27017"
+    MONGO_URI: str = "mongodb://mongos:27017"
     MONGO_DB_NAME: str = "saas_pm_db"
 
     # Paramètres d'authentification et chiffrement JWT

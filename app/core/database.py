@@ -63,8 +63,9 @@ async def seed_initial_data(db: AsyncIOMotorDatabase) -> None:
     avec les comptes pré-remplis (Alice / Acme Corp et Charlie / Beta Inc).
     """
     try:
-        company_count = await db.companies.count_documents({})
-        if company_count > 0:
+        # The cluster initializer may already have inserted sharding fixtures.
+        # Check for the application demo account instead of an empty database.
+        if await db.users.count_documents({"email": "alice@acme.com"}) > 0:
             return
 
         logger.info("Base de données vierge détectée. Initialisation des données de démonstration...")

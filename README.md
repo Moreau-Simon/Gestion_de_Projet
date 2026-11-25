@@ -1,7 +1,7 @@
 # SaaS Project Management Backend (Trello / Notion like) — FlowSaaS v2.0
 
 > **BUT 3 Informatique — R5.10 : Nouveaux paradigmes de bases de données**  
-> **TD1 : Startup – Outil de gestion de projet SaaS – PARTIE I**
+> **TD1 : Startup – Outil de gestion de projet SaaS – PARTIES I & II**
 
 Plateforme applicative SaaS collaborative multi-entreprises développée en **Python (FastAPI)** et s'appuyant sur **MongoDB 7.0**. L'application intègre une **isolation logicielle stricte** entre organisations clientes (multi-tenancy via `company_id`), une gestion complète des utilisateurs avec authentification sécurisée par jetons **JWT**, un tableau de bord analytique en temps réel, un moteur de recherche globale multi-projets, ainsi qu'un tableau **Kanban interactif** en glisser-déposer (Drag & Drop natif).
 
@@ -35,11 +35,10 @@ docker compose up -d --build
 *(Si vous utilisez une version plus ancienne de Docker Compose, la commande équivalente est `docker-compose up -d --build`)*.
 
 ### Que fait cette commande ?
-1. Lance le conteneur de base de données **MongoDB 7.0** avec un volume persistant `saas_mongo_data`.
-2. Exécute un **Healthcheck** sur MongoDB afin de s'assurer que le moteur est prêt à accepter des requêtes.
-3. Peuple automatiquement des **données de démonstration réalistes** au premier démarrage si la base est vide (*Acme Corp* avec Alice, Bob, un projet et 4 tâches Kanban, ainsi que *Beta Inc* avec Charlie).
-4. Construit l'image Docker optimisée pour l'application Python (`python:3.11-slim`, utilisateur non-root, cache pip).
-5. Démarre le serveur FastAPI sur le port `8000` via Uvicorn une fois MongoDB prêt.
+1. Démarre un Replica Set de configuration à trois membres, deux shards (`shard1RS`, `shard2RS`) comportant chacun trois membres, et le routeur `mongos`.
+2. Initialise automatiquement les Replica Sets, attend l'élection des Primaries, enregistre les shards et configure les collections shardées.
+3. Insère des fixtures de démonstration réparties sur 40 entreprises, 40 projets et 80 tâches ; l'application ajoute aussi ses exemples Acme/Beta.
+4. Construit l'image FastAPI et démarre l'API après la disponibilité du cluster MongoDB.
 
 Pour vérifier que tout fonctionne :
 - **Application Web SPA** : [http://localhost:8000/](http://localhost:8000/)
@@ -102,33 +101,25 @@ Cette version apporte des améliorations substantielles tant sur le plan techniq
 
 ---
 
-## 4. Configuration & Anticipation de la Réplication / Sharding (Partie II)
+## 4. Réplication, sharding et disponibilité (Partie II)
 
-Dans la Partie II du TD, l'architecture MongoDB évoluera vers un cluster distribué avec **Replica Set** et **Sharding**.
+La Partie II est maintenant exécutée par le `compose.yml` par défaut. L'application utilise le point d'entrée `mongodb://mongos:27017`, fourni par variable d'environnement. Deux shards répliqués répartissent les projets et les tâches par clé `company_id` hachée ; les utilisateurs sont shardés par `email` pour conserver l'unicité globale de l'adresse. Les serveurs de configuration sont eux-mêmes répliqués.
 
-L'application a été spécialement conçue pour s'adapter **sans aucune modification du code source** :
-Toute la connectivité est pilotée par les variables d'environnement (`.env` ou `compose.yml`).
+L'initialisation se fait sans commande manuelle après le démarrage : `scripts/init-replica-sets.sh` établit les Replica Sets et attend un Primary, puis `scripts/init-cluster.js` ajoute les shards, configure les collections et insère les fixtures. Le détail des serveurs, des flux réseau et des choix de clés figure dans [`docs/SPECIFICATION_TECHNIQUE_Partie-II.md`](docs/SPECIFICATION_TECHNIQUE_Partie-II.md).
 
-### Format de la chaîne de connexion (`MONGO_URI`) :
+### Vérifier la réplication et le sharding
 
-- **Phase actuelle (Standalone)** :
-  ```env
-  MONGO_URI=mongodb://mongodb:27017
-  MONGO_DB_NAME=saas_pm_db
-  ```
+```bash
+docker compose exec shard1a mongosh --quiet --eval 'rs.status().members.map(m => ({name: m.name, state: m.stateStr}))'
+docker compose exec mongos mongosh --quiet --eval 'sh.status()'
+docker compose exec mongos mongosh saas_pm_db --quiet --eval 'db.projects.getShardDistribution(); db.tasks.getShardDistribution()'
+```
 
-- **Évolution future vers un Replica Set (Haute disponibilité)** :
-  ```env
-  MONGO_URI=mongodb://mongo1:27017,mongo2:27017,mongo3:27017/?replicaSet=rs0
-  ```
+### Simuler la perte d'un Primary
 
-- **Évolution future vers un Cluster Shardé (Montée en charge distribuée)** :
-  ```env
-  MONGO_URI=mongodb://mongos1:27017,mongos2:27017
-  ```
+Identifier le Primary avec `rs.status()`, arrêter son service avec `docker compose stop <service>`, puis vérifier qu'un Secondary devient Primary et que [`http://localhost:8000/health`](http://localhost:8000/health) redevient sain. Redémarrer le membre avec `docker compose start <service>`. Une courte interruption pendant l'élection est normale.
 
-### Clé de Sharding anticipée
-L'isolation logicielle associe chaque document à un champ `company_id`. Les index MongoDB créés au démarrage (`init_db_indexes`) intègrent `company_id` en préfixe. Dès lors, le sharding par clé de tenant (`sh.shardCollection("saas_pm_db.users", { "company_id": "hashed" })`) s'effectuera naturellement sans réusinage applicatif.
+Les résultats disponibles et les observations restant à effectuer sont consignés dans la section 8 de [`docs/SPECIFICATION_TECHNIQUE_Partie-II.md`](docs/SPECIFICATION_TECHNIQUE_Partie-II.md).
 
 ---
 
@@ -285,8 +276,9 @@ Gestion_de_Projet/
 ├── README.md                      # Documentation d'installation et guide d'utilisation
 │
 ├── docs/                          # Spécifications pour le livrable TD1
-│   ├── SPECIFICATION_TECHNIQUE.md    # Architecture MongoDB, sharding et schémas JSON
-│   └── SPECIFICATION_FONCTIONNELLE.md # Description détaillée des fonctionnalités & RBAC
+│   ├── SPECIFICATION_TECHNIQUE.md        # Architecture MongoDB et schémas JSON (partie I)
+│   ├── SPECIFICATION_FONCTIONNELLE.md    # Fonctionnalités et RBAC (partie I)
+│   └── SPECIFICATION_TECHNIQUE_Partie-II.md # Cluster, flux, sharding et vérifications
 │
 ├── static/                        # Interface Web Single Page Application (SPA) v2.0
 │   ├── index.html                 # Structure HTML5 sémantique, dashboard et popover
@@ -326,5 +318,5 @@ Gestion_de_Projet/
 ## 9. Spécifications techniques et fonctionnelles
 
 Conformément aux livrables demandés dans le sujet :
-- **Spécification technique** : Retrouvez l'architecture de la base de données, la modélisation NoSQL, les index composés et la stratégie de sharding dans [`docs/SPECIFICATION_TECHNIQUE.md`](docs/SPECIFICATION_TECHNIQUE.md).
-- **Spécification fonctionnelle** : Retrouvez la matrice des rôles (RBAC), les règles d'isolation et la description des endpoints dans [`docs/SPECIFICATION_FONCTIONNELLE.md`](docs/SPECIFICATION_FONCTIONNELLE.md).
+- **Spécifications de la partie I** : Retrouvez l'architecture de la base, les schémas JSON et les fonctionnalités dans [`docs/SPECIFICATION_TECHNIQUE.md`](docs/SPECIFICATION_TECHNIQUE.md) et [`docs/SPECIFICATION_FONCTIONNELLE.md`](docs/SPECIFICATION_FONCTIONNELLE.md).
+- **Spécification de la partie II** : Retrouvez l'architecture distribuée et ses vérifications dans [`docs/SPECIFICATION_TECHNIQUE_Partie-II.md`](docs/SPECIFICATION_TECHNIQUE_Partie-II.md).
