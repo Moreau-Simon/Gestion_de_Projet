@@ -119,7 +119,7 @@ docker compose exec mongos mongosh saas_pm_db --quiet --eval 'db.projects.getSha
 
 Identifier le Primary avec `rs.status()`, arrêter son service avec `docker compose stop <service>`, puis vérifier qu'un Secondary devient Primary et que [`http://localhost:8000/health`](http://localhost:8000/health) redevient sain. Redémarrer le membre avec `docker compose start <service>`. Une courte interruption pendant l'élection est normale.
 
-Les résultats disponibles et les observations restant à effectuer sont consignés dans la section 8 de [`docs/SPECIFICATION_TECHNIQUE_Partie-II.md`](docs/SPECIFICATION_TECHNIQUE_Partie-II.md).
+Les résultats observés sont consignés dans [`docs/ANALYSE_RESULTATS_Partie-II.md`](docs/ANALYSE_RESULTATS_Partie-II.md).
 
 ---
 
@@ -276,9 +276,10 @@ Gestion_de_Projet/
 ├── README.md                      # Documentation d'installation et guide d'utilisation
 │
 ├── docs/                          # Spécifications pour le livrable TD1
-│   ├── SPECIFICATION_TECHNIQUE.md        # Architecture MongoDB et schémas JSON (partie I)
+│   ├── SPECIFICATION_TECHNIQUE_Partie-I.md        # Architecture MongoDB et schémas JSON (partie I)
 │   ├── SPECIFICATION_FONCTIONNELLE.md    # Fonctionnalités et RBAC (partie I)
-│   └── SPECIFICATION_TECHNIQUE_Partie-II.md # Cluster, flux, sharding et vérifications
+│   ├── SPECIFICATION_TECHNIQUE_Partie-II.md # Cluster, flux et sharding
+│   └── ANALYSE_RESULTATS_Partie-II.md # Résultats des vérifications et de la panne
 │
 ├── static/                        # Interface Web Single Page Application (SPA) v2.0
 │   ├── index.html                 # Structure HTML5 sémantique, dashboard et popover
@@ -318,5 +319,5 @@ Gestion_de_Projet/
 ## 9. Spécifications techniques et fonctionnelles
 
 Conformément aux livrables demandés dans le sujet :
-- **Spécifications de la partie I** : Retrouvez l'architecture de la base, les schémas JSON et les fonctionnalités dans [`docs/SPECIFICATION_TECHNIQUE.md`](docs/SPECIFICATION_TECHNIQUE.md) et [`docs/SPECIFICATION_FONCTIONNELLE.md`](docs/SPECIFICATION_FONCTIONNELLE.md).
-- **Spécification de la partie II** : Retrouvez l'architecture distribuée et ses vérifications dans [`docs/SPECIFICATION_TECHNIQUE_Partie-II.md`](docs/SPECIFICATION_TECHNIQUE_Partie-II.md).
+- **Spécifications de la partie I** : Retrouvez l'architecture de la base, les schémas JSON et les fonctionnalités dans [`docs/SPECIFICATION_TECHNIQUE_Partie-I.md`](docs/SPECIFICATION_TECHNIQUE_Partie-I.md) et [`docs/SPECIFICATION_FONCTIONNELLE.md`](docs/SPECIFICATION_FONCTIONNELLE.md).
+- **Livrables de la partie II** : Retrouvez l'architecture distribuée dans [`docs/SPECIFICATION_TECHNIQUE_Partie-II.md`](docs/SPECIFICATION_TECHNIQUE_Partie-II.md) et les résultats des tests dans [`docs/ANALYSE_RESULTATS_Partie-II.md`](docs/ANALYSE_RESULTATS_Partie-II.md).

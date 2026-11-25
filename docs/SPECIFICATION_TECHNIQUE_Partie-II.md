@@ -57,7 +57,7 @@ L'initialisation shard les collections applicatives suivantes dans `saas_pm_db` 
 | `users` | `{email: 1}` (plage) | L'application maintient un index unique global sur `email`, utilisé lors de l'inscription et de la connexion. MongoDB exige que la clé de shard fasse partie d'un index unique global ; choisir `email` conserve cette unicité sans changer le comportement applicatif. Les recherches utilisateurs par `company_id` peuvent en contrepartie être diffusées aux shards. |
 | `companies` | Non shardée | Collection de référence de faible volume, non requise pour répartir la charge principale des projets et tâches. |
 
-Le compromis de la clé `company_id` est qu'un locataire pris isolément reste localisé sur un shard. Cette stratégie favorise le routage des requêtes métier par entreprise et répartit la charge entre les entreprises. Les collections `projects` et `tasks` reçoivent huit chunks initiaux chacune pour que MongoDB les distribue sur les deux shards avant l'insertion des fixtures.
+Le compromis de la clé `company_id` est qu'un locataire pris isolément reste localisé sur un shard. Cette stratégie favorise le routage des requêtes métier par entreprise et répartit la charge entre les entreprises. L'initialisation demande huit chunks initiaux pour chacune des collections `projects` et `tasks` afin de permettre leur distribution entre les deux shards. L'équilibreur peut ensuite fusionner des chunks peu remplis ; le nombre effectivement observé est consigné dans l'analyse des résultats.
 
 ## 6. Initialisation et fixtures automatisées
 
@@ -111,13 +111,6 @@ docker compose start shard1a
 
 Remplacer `shard1a` par le nom du service Primary effectivement observé. L'arrêt d'un membre secondaire permet aussi de démontrer la réplication, mais ne simule pas la perte du Primary.
 
-## 8. Résultats relevés dans l'environnement de développement
+## 8. Analyse des résultats
 
-| Contrôle | Résultat |
-|---|---|
-| Syntaxe de `compose.yml` | Validée par `docker compose config --quiet`. |
-| Syntaxe du script d'initialisation JavaScript | Validée par `node --check scripts/init-cluster.js`. |
-| Syntaxe des fichiers Python modifiés | Validée par l'analyse syntaxique Python. |
-| Réplication, distribution réelle et élection après panne | Non mesurées : au lancement de la vérification, le moteur Docker Desktop ne répondait pas (`dockerDesktopLinuxEngine` absent). |
-
-Les commandes de la section 7 donnent les observations à relever dès que le moteur Docker est actif. Aucune valeur de répartition ni résultat de bascule n'est présenté ici comme mesuré tant que ces conteneurs n'ont pas réellement démarré.
+Les mesures réellement effectuées au démarrage, pendant les tests fonctionnels, lors de la panne d'un Primary et après sa remise en service sont présentées dans [`ANALYSE_RESULTATS_Partie-II.md`](ANALYSE_RESULTATS_Partie-II.md).
